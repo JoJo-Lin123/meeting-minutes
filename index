@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 會議助理</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Ionicons 圖示庫 v7 -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@7/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* 使用 Inter 字體 */
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* 載入中動畫 */
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 客製化捲軸 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        /* 活躍的分頁按鈕 */
+        .tab-btn.active {
+            background-color: #ffffff;
+            color: #2563eb;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .tab-btn {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+        /* 增加下載按鈕樣式 */
+        .download-btn {
+            background-color: #10b981; /* green-500 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .download-btn:hover {
+            background-color: #059669; /* green-600 */
+        }
+        /* 負責人標籤樣式 */
+        .responsible-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem; /* 4px */
+            background-color: #e0e7ff; /* indigo-100 */
+            color: #3730a3; /* indigo-800 */
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            padding: 0.125rem 0.5rem; /* 2px 8px */
+            border-radius: 9999px; /* rounded-full */
+            margin-top: 0.25rem; /* 4px */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- 主結構 -->
+    <div class="flex h-screen bg-slate-100">
+
+        <!-- 左側邊欄: 會議列表 -->
+        <aside id="sidebar" class="w-1/3 max-w-sm h-full flex flex-col bg-white border-r border-slate-200">
+            <!-- 頂部 -->
+            <header class="p-4 border-b border-slate-200 flex-shrink-0">
+                <h1 class="text-2xl font-bold text-blue-600">AI 會議助理</h1>
+                <p id="auth-status" class="text-xs text-slate-400 mt-1">初始化中...</p>
+            </header>
+            
+            <!-- "新會議" 按鈕 (移到列表頂部) -->
+            <div class="p-4 border-b border-slate-200 flex-shrink-0 flex justify-between items-center">
+                 <h2 class="text-lg font-semibold text-slate-800">會議列表</h2>
+                <button id="new-meeting-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg shadow transition duration-150 ease-in-out flex items-center justify-center gap-1 text-sm">
+                    <ion-icon name="add-circle-outline" class="text-lg"></ion-icon>
+                    <span>新會議</span>
+                </button>
+            </div>
+
+            <!-- 會議列表 -->
+            <nav class="flex-1 overflow-y-auto">
+                <ul id="meetings-list">
+                    <!-- 會議列表將由 JS 動態載入 -->
+                    <li class="p-4 text-center text-slate-500">載入中...</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 右側主內容區 -->
+        <main id="main-content" class="flex-1 h-full flex flex-col">
+            
+            <!-- 視圖切換器 (移到主內容區頂部) -->
+            <div id="view-toggle-container" class="p-2 bg-slate-100 border-b border-slate-200 flex-shrink-0">
+                <div class="flex w-full max-w-sm mx-auto bg-slate-200 rounded-lg p-1">
+                    <button class="tab-btn w-1/2 py-2 px-4 rounded-md text-sm font-semibold focus:outline-none" data-view="meetings">
+                        <ion-icon name="document-text-outline" class="inline-block align-text-bottom mr-1"></ion-icon>
+                        會議
+                    </button>
+                    <button class="tab-btn w-1/2 py-2 px-4 rounded-md text-sm font-semibold focus:outline-none" data-view="todos">
+                         <ion-icon name="checkbox-outline" class="inline-block align-text-bottom mr-1"></ion-icon>
+                        待辦事項
+                    </button>
+                </div>
+            </div>
+
+            <!-- 內容滾動區 -->
+            <div class="flex-1 overflow-y-auto p-6 md:p-10">
+                <!-- 會議表單 (用於新增) -->
+                <section id="meeting-form" style="display: none;">
+                    <form class="max-w-3xl mx-auto space-y-6">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6">新增會議記錄</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="meeting-title" class="block text-sm font-medium text-slate-700 mb-1">會議標題</label>
+                                <input type="text" id="meeting-title" name="meeting-title" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：Q4 產品策略會議">
+                            </div>
+                            <div>
+                                <label for="meeting-recorder" class="block text-sm font-medium text-slate-700 mb-1">會議記錄人</label>
+                                <input type="text" id="meeting-recorder" name="meeting-recorder" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：王小明">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="meeting-attendees" class="block text-sm font-medium text-slate-700 mb-1">出席者 (用逗號分隔)</label>
+                            <input type="text" id="meeting-attendees" name="meeting-attendees" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：張三, 李四, 王五">
+                        </div>
+
+                        <div>
+                            <label for="meeting-notes" class="block text-sm font-medium text-slate-700 mb-1">會議筆記</label>
+                            <textarea id="meeting-notes" name="meeting-notes" rows="15" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="請在此輸入您的會議原始筆記...
+AI 將會根據這裡的內容產生摘要和待辦事項。
+範例：
+- 李四報告了 A 專案的進度，目前已完成 80%。
+- 張三提到下週需要完成 B 模組的測試。
+- 王五建議我們可以導入新的 C 工具來提升效率。
+- 結論：下週五前，張三負責完成 B 模組測試。"></textarea>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2">
+                                <ion-icon name="sparkles-outline"></ion-icon>
+                                <span>儲存並由 AI 分析</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+                
+                <!-- 會議顯示 (用於檢視) -->
+                <section id="meeting-display" class="max-w-4xl mx-auto space-y-8" style="display: none;">
+                    <!-- 標題和基本資訊 -->
+                    <div>
+                        <div class="flex justify-between items-start gap-4">
+                            <div>
+                                <h2 id="display-title" class="text-4xl font-bold text-slate-800"></h2>
+                                <p id="display-date" class="text-lg text-slate-500 mt-2"></p>
+                                <p id="display-recorder" class="text-md text-slate-600 mt-1"></p>
+                                <p id="display-attendees" class="text-md text-slate-600 mt-1"></p>
+                            </div>
+                            <!-- 下載按鈕容器 -->
+                            <div id="download-btn-container" class="flex-shrink-0 mt-2">
+                                <!-- 下載按鈕由 JS 填入 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI 摘要 -->
+                    <div id="display-summary" class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                        <!-- JS 載入 -->
+                    </div>
+                    
+                    <!-- 待辦事項 -->
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 text-slate-700">待辦事項 (進度追蹤)</h3>
+                        <ul id="display-action-items-list" class="space-y-3">
+                            <!-- JS 載入 -->
+                        </ul>
+                    </div>
+
+                    <!-- 原始筆記 -->
+                    <div id="display-notes" class="mt-10">
+                        <!-- JS 載入 -->
+                    </div>
+                </section>
+                
+                <!-- 全域待辦事項視圖 -->
+                <section id="todos-view" class="max-w-4xl mx-auto space-y-8" style="display: none;">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-6">所有待辦事項</h2>
+                    <div id="global-todos-list" class="space-y-4">
+                        <!-- 全域待辦事項列表由 JS 載入 -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 載入中遮罩 -->
+    <div id="loading-overlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            <p class="text-lg font-medium text-slate-700">處理中...</p>
+        </div>
+    </div>
+    
+    <!-- 錯誤訊息 Modal -->
+    <div id="error-overlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <div class="flex items-center">
+                <ion-icon name="warning-outline" class="text-3xl text-red-500 mr-3 flex-shrink-0"></ion-icon>
+                <h3 class="text-xl font-semibold text-slate-800">發生錯誤</h3>
+            </div>
+            <p id="error-message-text" class="text-slate-600 mt-4 mb-6 break-words">發生未預期的錯誤。</p>
+            <button id="close-error-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg">
+                關閉
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // 匯入 Firebase 模組
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            addDoc,
+            updateDoc,
+            onSnapshot,
+            collection,
+            query,
+            getDoc,
+            where,
+            Timestamp,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 全域變數 ---
+        let db, auth, userId, appId;
+        let meetings = []; // 儲存會議資料
+        let globalActionItems = []; // 儲存所有待辦事項
+        let currentMeetingId = null; // 當前選中的會議 ID
+        let currentView = 'meetings'; // 'meetings' 或 'todos'
+
+        // Gemini API 金鑰 (請將其保留為空字串)
+        const geminiApiKey = "";
+        // 修正 Gemini API 網址拼寫錯誤
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`;
+
+        // --- 變數 (將在 DOM 載入後填充) ---
+        let meetingsListEl, mainContentEl, meetingFormEl, meetingDisplayEl, todosViewEl,
+            globalTodosListEl, loadingOverlay, authStatusEl, newMeetingBtn,
+            viewToggleContainer, viewToggleBtns, sidebarEl, errorOverlay,
+            errorMessageText, closeErrorBtn;
+
+        // --- Firebase 初始化與認證 ---
+        async function initFirebase() {
+            try {
+                // 從全域變數讀取 Firebase 設定
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                if (!firebaseConfig.apiKey) {
+                    console.error("Firebase config is missing.");
+                    authStatusEl.textContent = "錯誤：Firebase 設定載入失敗。";
+                    return;
+                }
+                
+                // 設定 Firestore log 等級
+                setLogLevel('Debug');
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 監聽認證狀態
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        authStatusEl.textContent = `使用者 ID: ${userId.substring(0, 8)}... (已登入)`;
+                        // 使用者已登入，開始監聽資料
+                        listenToMeetings();
+                        listenToGlobalActionItems(); // 監聽全域待辦事項
+                    } else {
+                        // 嘗試使用自訂 token 登入
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                // 否則，匿名登入
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Auth error:", error);
+                            authStatusEl.textContent = "認證失敗";
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                authStatusEl.textContent = "應用程式初始化失敗。";
+            }
+        }
+
+        // --- Firestore 資料監聽 ---
+
+        // 監聽會議
+        function listenToMeetings() {
+            if (!userId) return;
+            const meetingsColPath = `artifacts/${appId}/users/${userId}/meetings`;
+            const q = query(collection(db, meetingsColPath));
+
+            onSnapshot(q, (snapshot) => {
+                meetings = []; // 重設陣列，防止 snapshot 觸發時重複
+                snapshot.forEach((doc) => {
+                    meetings.push({ id: doc.id, ...doc.data() });
+                });
+                // 依照 createdAt 排序 (最新的在最上面)
+                meetings.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                
+                if (currentView === 'meetings') {
+                    renderMeetingsList(); // 重新渲染列表
+                }
+
+            }, (error) => {
+                console.error("Error listening to meetings:", error);
+            });
+        }
+
+        // 監聽全域待辦事項
+        function listenToGlobalActionItems() {
+            if (!userId) return;
+            const actionItemsColPath = `artifacts/${appId}/users/${userId}/actionItems`;
+            const q = query(collection(db, actionItemsColPath));
+
+            onSnapshot(q, (snapshot) => {
+                globalActionItems = []; // 重設陣列
+                snapshot.forEach((doc) => {
+                    globalActionItems.push({ id: doc.id, ...doc.data() });
+                });
+                // 排序：未完成的在最前，然後按建立時間
+                globalActionItems.sort((a, b) => {
+                    const statusA = a.status === 'done' ? 1 : 0;
+                    const statusB = b.status === 'done' ? 1 : 0;
+                    if (statusA !== statusB) return statusA - statusB;
+                    // 如果狀態相同，則按建立時間 (新的在前)
+                    const timeA = a.createdAt?.toMillis() || 0;
+                    const timeB = b.createdAt?.toMillis() || 0;
+                    return timeB - timeA;
+                });
+                
+                // 根據當前視圖更新
+                if (currentView === 'todos') {
+                    renderGlobalTodosList();
+                }
+
+                // 如果當前正在查看某個會議，也更新該會議的待辦事項
+                if (currentView === 'meetings' && currentMeetingId) {
+                    const meetingData = meetings.find(m => m.id === currentMeetingId);
+                    if (meetingData) {
+                        renderMeetingDisplay(meetingData);
+                    }
+                }
+
+            }, (error) => {
+                console.error("Error listening to global action items:", error);
+            });
+        }
+
+
+        // --- 畫面渲染 ---
+
+        // 渲染左側會議列表
+        function renderMeetingsList() {
+            meetingsListEl.innerHTML = ''; // 清空列表
+            if (meetings.length === 0) {
+                meetingsListEl.innerHTML = '<p class="p-4 text-slate-500">尚無會議記錄。</p>';
+                return;
+            }
+
+            meetings.forEach(meeting => {
+                const li = document.createElement('li');
+                li.className = `border-b border-slate-200 ${currentMeetingId === meeting.id ? 'bg-blue-100' : 'hover:bg-slate-50'}`;
+                li.innerHTML = `
+                    <button class="w-full text-left p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" data-id="${meeting.id}">
+                        <h3 class="font-semibold text-slate-900 truncate">${meeting.title || '未命名會議'}</h3>
+                        <p class="text-sm text-slate-500">${formatDate(meeting.createdAt)}</p>
+                    </button>
+                `;
+                li.querySelector('button').addEventListener('click', () => {
+                    currentMeetingId = meeting.id;
+                    renderMeetingsList(); // 重新渲染列表以更新選中狀態
+                    
+                    // 找到完整的 meeting 物件並傳遞
+                    const selectedMeeting = meetings.find(m => m.id === currentMeetingId);
+                    if (selectedMeeting) {
+                        renderMeetingDisplay(selectedMeeting);
+                    }
+                });
+                meetingsListEl.appendChild(li);
+            });
+        }
+
+        // 顯示新會議表單
+        function showNewMeetingForm() {
+            currentMeetingId = null;
+            meetingFormEl.style.display = 'block';
+            meetingDisplayEl.style.display = 'none';
+            todosViewEl.style.display = 'none'; // 隱藏全域待辦
+            
+            // 重設表單
+            const form = meetingFormEl.querySelector('form');
+            if (form) form.reset();
+            
+            renderMeetingsList(); // 更新列表的選中狀態
+        }
+        
+        // 顯示已儲存的會議
+        function renderMeetingDisplay(meeting) {
+            meetingFormEl.style.display = 'none';
+            meetingDisplayEl.style.display = 'block';
+            todosViewEl.style.display = 'none';
+
+            // 填充基本資料
+            document.getElementById('display-title').textContent = meeting.title || '未命名會議';
+            document.getElementById('display-date').textContent = formatDate(meeting.createdAt);
+            // 新增：顯示會議記錄人
+            document.getElementById('display-recorder').textContent = `會議記錄: ${meeting.recorder || '未記錄'}`;
+            document.getElementById('display-attendees').textContent = `出席者: ${meeting.attendees ? meeting.attendees.join(', ') : '未記錄'}`;
+            
+            // 填充筆記
+            document.getElementById('display-notes').innerHTML = `
+                <h3 class="text-xl font-semibold mb-3 text-slate-700">原始筆記</h3>
+                <div class="prose prose-slate max-w-none bg-white p-4 rounded-md border border-slate-200 whitespace-pre-wrap">${escapeHTML(meeting.notes) || '無'}</div>
+            `;
+            
+            // 填充摘要
+            document.getElementById('display-summary').innerHTML = `
+                <h3 class="text-xl font-semibold mb-3 text-slate-700">AI 摘要</h3>
+                <div class="prose prose-slate max-w-none bg-white p-4 rounded-md border border-slate-200">${meeting.summary || '無'}</div>
+            `;
+
+            // 填充待辦事項 (從 globalActionItems 篩選)
+            const actionItemsListEl = document.getElementById('display-action-items-list');
+            actionItemsListEl.innerHTML = ''; // 清空
+            
+            // 從全域待辦事項中篩選出屬於此會議的
+            const meetingActionItems = globalActionItems.filter(item => item.meetingId === meeting.id);
+
+            if (meetingActionItems.length > 0) {
+                // 渲染待辦事項 (使用新的通用函式)
+                meetingActionItems.forEach(item => {
+                    const li = createActionItemElement(item);
+                    actionItemsListEl.appendChild(li);
+                });
+                // 綁定所有事件
+                attachActionItemListeners(actionItemsListEl);
+            } else {
+                actionItemsListEl.innerHTML = '<p class="p-4 text-slate-500">沒有待辦事項。</p>';
+            }
+
+            // 新增：下載按鈕功能
+            const downloadBtnContainer = document.getElementById('download-btn-container');
+            downloadBtnContainer.innerHTML = ''; // 清空舊按鈕
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = `
+                <ion-icon name="download-outline"></ion-icon>
+                <span>下載會議記錄 (HTML)</span>
+            `;
+            downloadBtn.addEventListener('click', () => downloadMeetingMinutes(meeting));
+            downloadBtnContainer.appendChild(downloadBtn);
+        }
+
+        // 顯示全域待辦事項列表
+        function renderGlobalTodosList() {
+            meetingFormEl.style.display = 'none';
+            meetingDisplayEl.style.display = 'none';
+            todosViewEl.style.display = 'block';
+            globalTodosListEl.innerHTML = ''; // 清空
+
+            if (globalActionItems.length === 0) {
+                globalTodosListEl.innerHTML = '<p class="p-4 text-slate-500">太好了！沒有任何待辦事項。</p>';
+                return;
+            }
+
+            // 篩選出未完成和已完成
+            const pendingItems = globalActionItems.filter(item => item.status !== 'done');
+            const doneItems = globalActionItems.filter(item => item.status === 'done');
+
+            if (pendingItems.length > 0) {
+                globalTodosListEl.innerHTML += `<h3 class="text-xl font-semibold mb-3 text-slate-700">進行中 (${pendingItems.length})</h3>`;
+                const pendingList = document.createElement('ul');
+                pendingList.className = 'space-y-3';
+                pendingItems.forEach(item => {
+                    // 傳入 true 來顯示會議標題
+                    const li = createActionItemElement(item, true);
+                    pendingList.appendChild(li);
+                });
+                globalTodosListEl.appendChild(pendingList);
+            }
+
+            if (doneItems.length > 0) {
+                globalTodosListEl.innerHTML += `<h3 class="text-xl font-semibold mb-3 mt-8 text-slate-500">已完成 (${doneItems.length})</h3>`;
+                const doneList = document.createElement('ul');
+                doneList.className = 'space-y-3';
+                doneItems.forEach(item => {
+                    const li = createActionItemElement(item, true);
+                    // 已完成的預設為半透明
+                    li.classList.add('opacity-70');
+                    doneList.appendChild(li);
+                });
+                globalTodosListEl.appendChild(doneList);
+            }
+            
+            // 綁定所有事件
+            attachActionItemListeners(globalTodosListEl);
+        }
+
+
+        // --- 共用的待辦事項 UI 產生器 ---
+
+        // 建立單個待辦事項的 HTML 元素
+        function createActionItemElement(item, showMeetingTitle = false) {
+            const li = document.createElement('li');
+            // 調整 li 結構以容納進度，並加入 group 讓 group-hover 生效
+            li.className = 'flex flex-col gap-4 p-4 bg-white rounded-lg shadow-sm border border-slate-200 group';
+            // 使用 item.id 作為 data-item-id
+            li.setAttribute('data-item-id', item.id);
+
+            // --- 進度更新列表 HTML ---
+            let progressHtml = '<ul class="space-y-2 mt-3 border-t border-slate-200 pt-3">';
+            if (item.progress && item.progress.length > 0) {
+                // 確保排序，最新的在最前面
+                const sortedProgress = [...item.progress].sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                
+                sortedProgress.forEach(update => {
+                    // 確保 timestamp 唯一性，若無 toMillis() (例如剛新增尚未同步)，則用 Date.now()
+                    const progressTimestamp = update.createdAt?.toMillis() || Date.now();
+                    progressHtml += `
+                        <li class="text-sm text-slate-600 break-words group" data-timestamp="${progressTimestamp}">
+                            <!-- 顯示模式 -->
+                            <div class="progress-display flex justify-between items-start gap-2">
+                                <span class="progress-text flex-1">
+                                    <span class="font-medium text-slate-500">${formatDate(update.createdAt)}:</span>
+                                    ${escapeHTML(update.text)}
+                                </span>
+                                <button class="edit-progress-btn p-1 text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" data-progress-timestamp="${progressTimestamp}">
+                                    <ion-icon name="pencil-outline" class="text-base"></ion-icon>
+                                </button>
+                            </div>
+                            <!-- 編輯模式 (預設隱藏) -->
+                            <div class="progress-edit" style="display: none;">
+                                <textarea class="w-full p-2 border border-slate-300 rounded-md text-sm mt-1">${escapeHTML(update.text)}</textarea>
+                                <div class="flex gap-2 mt-1 justify-end">
+                                    <button class="cancel-edit-btn bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs py-1 px-2 rounded">取消</button>
+                                    <button class="save-progress-btn bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded" data-progress-timestamp="${progressTimestamp}">儲存</button>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                });
+            } else {
+                progressHtml += '<li class="text-sm text-slate-400 italic">尚無進度更新。</li>';
+            }
+            progressHtml += '</ul>';
+
+            // --- 新增進度表單 HTML ---
+            // ID 必須是唯一的，使用 item.id
+            const progressInputId = `progress-input-${item.id}`;
+            const addProgressHtml = `
+                <div class="flex gap-2 mt-3 border-t border-slate-200 pt-3">
+                    <input type="text" id="${progressInputId}" class="flex-1 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="新增進度說明...">
+                    <button class="add-progress-btn flex-shrink-0 bg-gray-200 hover:bg-gray-300 text-slate-700 font-semibold py-2 px-3 rounded-md text-sm" data-input-id="${progressInputId}">
+                        新增
+                    </button>
+                </div>
+            `;
+
+            // --- 主要項目 HTML ---
+            const status = item.status || 'todo';
+            const colorClasses = getStatusColorClasses(status);
+            
+            // 新增：如果要求，顯示會議標題
+            const meetingTitleHtml = showMeetingTitle ? `
+                <p class="text-xs text-blue-600 font-medium mb-1 truncate">
+                    <ion-icon name="document-text-outline" class="inline-block align-text-bottom"></ion-icon>
+                    ${escapeHTML(item.meetingTitle || '未知會議')}
+                </p>` : '';
+
+            li.innerHTML = `
+                <!-- 待辦事項 顯示模式 -->
+                <div class="action-item-display">
+                    ${meetingTitleHtml}
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-800 break-words">${escapeHTML(item.item)}</p>
+                            <!-- 修改：使用標籤顯示負責人 -->
+                            <span class="responsible-badge">
+                                <ion-icon name="person-outline" class="text-sm"></ion-icon>
+                                <span>${escapeHTML(item.responsible || '未指定')}</span>
+                            </span>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <button class="edit-action-item-btn p-1 text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ion-icon name="pencil-outline" class="text-base"></ion-icon>
+                            </button>
+                            <select class="status-select rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm ${colorClasses} transition-colors duration-150">
+                                <option value="todo" ${item.status === 'todo' ? 'selected' : ''}>待辦</option>
+                                <option value="inprogress" ${item.status === 'inprogress' ? 'selected' : ''}>進行中</option>
+                                <option value="done" ${item.status === 'done' ? 'selected' : ''}>已完成</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 待辦事項 編輯模式 (預設隱藏) -->
+                <div class="action-item-edit" style="display: none;">
+                    <div class="space-y-2">
+                        <div>
+                            <label class="text-xs font-medium text-slate-600">任務描述</label>
+                            <textarea class="w-full p-2 border border-slate-300 rounded-md text-sm action-item-edit-text">${escapeHTML(item.item)}</textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-600">負責人</label>
+                            <input type="text" class="w-full p-2 border border-slate-300 rounded-md text-sm action-item-edit-responsible" value="${escapeHTML(item.responsible || '')}">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-2 justify-end">
+                        <button class="cancel-action-item-btn bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs py-1 px-2 rounded">取消</button>
+                        <button class="save-action-item-btn bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">儲存</button>
+                    </div>
+                </div>
+
+                <!-- 進度區塊 (會被編輯模式隱藏) -->
+                <div class="action-item-progress-area">
+                    ${progressHtml}
+                    ${addProgressHtml}
+                </div>
+            `;
+            return li;
+        }
+
+
+        // --- 共用的待辦事項事件綁定 ---
+        function attachActionItemListeners(containerElement) {
+            
+            // 獲取 action-item-id
+            const getItemId = (e) => e.currentTarget.closest('li[data-item-id]').dataset.itemId;
+
+            // 幫所有 select 加上事件監聽
+            containerElement.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const newStatus = e.target.value;
+                    const itemId = getItemId(e);
+                    
+                    // 更新顏色
+                    e.target.classList.remove('bg-gray-200', 'text-gray-800', 'bg-yellow-200', 'text-yellow-800', 'bg-green-200', 'text-green-800', 'bg-gray-100', 'text-slate-800');
+                    const newClasses = getStatusColorClasses(newStatus).split(' ');
+                    e.target.classList.add(...newClasses);
+
+                    // 呼叫更新 
+                    updateActionItemStatus(itemId, newStatus);
+                });
+            });
+
+            // 幫所有 "新增進度" 按鈕加上事件監聽
+            containerElement.querySelectorAll('.add-progress-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemId = getItemId(e);
+                    const inputElId = e.currentTarget.dataset.inputId;
+                    const inputEl = document.getElementById(inputElId);
+                    if (inputEl) {
+                        const updateText = inputEl.value;
+                        if (updateText.trim()) {
+                            // 呼叫更新 
+                            addProgressUpdate(itemId, updateText);
+                            inputEl.value = ''; // 清除輸入框
+                        }
+                    }
+                });
+                // 讓 Enter 鍵也能觸發
+                const inputEl = document.getElementById(btn.dataset.inputId);
+                if (inputEl) {
+                    inputEl.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            btn.click(); // 觸發按鈕點擊
+                        }
+                    });
+                }
+            });
+
+            // 幫所有 "編輯/儲存/取消" 按鈕加上事件監聽 (進度留言)
+            
+            // 點擊 "編輯" (進度留言)
+            containerElement.querySelectorAll('.edit-progress-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const li = e.currentTarget.closest('li[data-timestamp]');
+                    li.querySelector('.progress-display').style.display = 'none';
+                    li.querySelector('.progress-edit').style.display = 'block';
+                });
+            });
+
+            // 點擊 "取消"
+            containerElement.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const li = e.currentTarget.closest('li[data-timestamp]');
+                    const textarea = li.querySelector('.progress-edit textarea');
+                    // 恢復原始值 (textarea 的 value 是 innerHTML)
+                    const originalText = li.querySelector('.progress-text').textContent.split(':').slice(1).join(':').trim();
+                    textarea.value = originalText;
+                    li.querySelector('.progress-display').style.display = 'flex';
+                    li.querySelector('.progress-edit').style.display = 'none';
+                });
+            });
+
+            // 點擊 "儲存"
+            containerElement.querySelectorAll('.save-progress-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemId = getItemId(e);
+                    const progressTimestamp = parseInt(e.currentTarget.dataset.progressTimestamp);
+                    const li = e.currentTarget.closest('li[data-timestamp]');
+                    const newText = li.querySelector('.progress-edit textarea').value;
+                    
+                    if (newText.trim()) {
+                        // 呼叫更新 
+                        updateProgressUpdateText(itemId, progressTimestamp, newText.trim());
+                    }
+                });
+            });
+
+            // 幫所有 "編輯/儲存/取消" 按鈕加上事件監聽 (待辦事項)
+
+            // 點擊 "編輯" (待辦事項)
+            containerElement.querySelectorAll('.edit-action-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const li = e.currentTarget.closest('li[data-item-id]');
+                    li.querySelector('.action-item-display').style.display = 'none';
+                    li.querySelector('.action-item-edit').style.display = 'block';
+                    li.querySelector('.action-item-progress-area').style.display = 'none'; // 隱藏進度區
+                });
+            });
+
+            // 點擊 "取消" (待辦事項)
+            containerElement.querySelectorAll('.cancel-action-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const li = e.currentTarget.closest('li[data-item-id]');
+                    const itemId = getItemId(e);
+                    const originalItem = globalActionItems.find(item => item.id === itemId);
+                    
+                    // 恢復原始值
+                    li.querySelector('.action-item-edit-text').value = originalItem.item;
+                    li.querySelector('.action-item-edit-responsible').value = originalItem.responsible || '';
+
+                    li.querySelector('.action-item-display').style.display = 'block';
+                    li.querySelector('.action-item-edit').style.display = 'none';
+                    li.querySelector('.action-item-progress-area').style.display = 'block'; // 顯示進度區
+                });
+            });
+
+            // 點擊 "儲存" (待辦事項)
+            containerElement.querySelectorAll('.save-action-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemId = getItemId(e);
+                    const li = e.currentTarget.closest('li[data-item-id]');
+                    const newText = li.querySelector('.action-item-edit-text').value;
+                    const newResponsible = li.querySelector('.action-item-edit-responsible').value;
+                    
+                    if (newText.trim()) {
+                        // 呼叫更新 
+                        updateActionItemDetails(itemId, newText.trim(), newResponsible.trim());
+                    } else {
+                        console.warn("任務描述不可為空。");
+                        li.querySelector('.action-item-edit-text').focus();
+                    }
+                });
+            });
+        }
+
+
+        // --- 輔助函式 ---
+
+        // 格式化日期
+        function formatDate(timestamp) {
+            if (!timestamp) return '未知日期';
+            const date = timestamp.toDate();
+            return date.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // 取得狀態顏色
+        function getStatusColorClasses(status) {
+            switch(status) {
+                case 'todo':
+                    return 'bg-gray-200 text-gray-800';
+                case 'inprogress':
+                    return 'bg-yellow-200 text-yellow-800';
+                case 'done':
+                    return 'bg-green-200 text-green-800';
+                default:
+                    return 'bg-gray-100 text-slate-800';
+            }
+        }
+
+        // HTML 特殊字元跳脫
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+        
+        function showLoading(message) {
+            loadingOverlay.querySelector('p').textContent = message || '處理中...';
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        // 顯示錯誤 Modal
+        function showErrorModal(message) {
+            errorMessageText.textContent = message;
+            errorOverlay.style.display = 'flex';
+        }
+
+        // 隱藏錯誤 Modal
+        function hideErrorModal() {
+            errorOverlay.style.display = 'none';
+        }
+
+
+        // --- Gemini API 呼叫 (同前) ---
+        async function getAiSummary(notes) {
+            const systemPrompt = `
+                你是一個專業的會議助理。請根據以下中文會議記錄，完成兩項任務：
+                1.  **產生摘要 (summary):** 產生一段精簡的會議摘要，總結會議的關鍵討論點和結論。
+                2.  **提取待辦事項 (actionItems):** 提取所有明確的待辦事項。
+                    - 每一項待辦事項 (action item) 必須包含 'item' (任務描述) 和 'responsible' (負責人)。
+                    - 如果找不到明確的負責人，請將 'responsible' 設為 '未指定'。
+
+                請嚴格依照以下的 JSON 格式回傳，不要有任何多餘的文字或 markdown 標記：
+            `;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    summary: { type: "STRING" },
+                    actionItems: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                item: { type: "STRING" },
+                                responsible: { type: "STRING" }
+                            },
+                            required: ["item", "responsible"]
+                        }
+                    }
+                },
+                required: ["summary", "actionItems"]
+            };
+            const payload = {
+                contents: [{ parts: [{ text: notes }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                }
+            };
+            
+            try {
+                let response;
+                let delay = 1000;
+                for (let i = 0; i < 3; i++) {
+                    response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                    if (response.status === 429 || response.status >= 500) { // 429: Quota Exceeded
+                        console.warn(`Gemini API request failed with status ${response.status}. Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    } else {
+                        // 其他錯誤 (例如 400: Bad Request) 不重試
+                        throw new Error(`Gemini API 請求失敗，狀態碼: ${response.status}`);
+                    }
+                }
+                if (!response.ok) {
+                    // 重試後仍然失敗
+                    throw new Error(`Gemini API 請求失敗，狀態碼: ${response.status} (可能是額度已用完)`);
+                }
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const jsonString = candidate.content.parts[0].text;
+                    return JSON.parse(jsonString); // 解析 JSON
+                } else {
+                    console.error("Invalid response structure from Gemini API:", result);
+                    // 檢查是否有 blockReason (例如 SAFETY)
+                    const blockReason = candidate?.finishReason;
+                    if (blockReason) {
+                         throw new Error(`AI 因 ${blockReason} 理由拒絕回應。`);
+                    }
+                    throw new Error("AI 無法處理您的請求，回傳的資料格式不符。");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                // 將錯誤訊息傳遞出去，以便顯示在 Modal 中
+                throw new Error(`AI 分析失敗: ${error.message}`);
+            }
+        }
+
+
+        // --- Firestore 資料操作 (移除 alert) ---
+
+        // 處理表單提交 (新增會議 和 待辦事項)
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!userId) {
+                showErrorModal("錯誤：使用者未登入。");
+                return;
+            }
+
+            const title = document.getElementById('meeting-title').value || '未命名會議';
+            const attendees = document.getElementById('meeting-attendees').value.split(',').map(s => s.trim()).filter(Boolean);
+            const notes = document.getElementById('meeting-notes').value;
+            // 新增：讀取會議記錄人
+            const recorder = document.getElementById('meeting-recorder').value;
+
+            if (!notes.trim()) {
+                showErrorModal("會議筆記不能為空。");
+                return;
+            }
+
+            showLoading('AI 分析中，請稍候...');
+
+            try {
+                // 1. 呼叫 AI 產生摘要和待辦事項
+                const aiResult = await getAiSummary(notes);
+                const { summary, actionItems } = aiResult;
+                
+                // 2. 準備儲存「會議」
+                const meetingData = {
+                    title,
+                    attendees,
+                    notes,
+                    recorder, // 新增
+                    summary,
+                    createdAt: Timestamp.now(),
+                    userId: userId
+                };
+                
+                showLoading('儲存會議記錄中...');
+                const meetingsColPath = `artifacts/${appId}/users/${userId}/meetings`;
+                const meetingDocRef = await addDoc(collection(db, meetingsColPath), meetingData);
+                const newMeetingId = meetingDocRef.id;
+
+                // 3. 準備並儲存「待辦事項」 (分開儲存)
+                showLoading('建立待辦事項中...');
+                const actionItemsColPath = `artifacts/${appId}/users/${userId}/actionItems`;
+                
+                // 使用 Promise.all 併發寫入
+                const createActionItemPromises = actionItems.map(item => {
+                    const itemData = {
+                        ...item,
+                        status: 'todo', // 預設狀態
+                        progress: [], // 初始化進度陣列
+                        createdAt: Timestamp.now(), // 待辦事項的建立時間
+                        meetingId: newMeetingId, // 關聯回會議
+                        meetingTitle: title // 方便在全域列表顯示
+                    };
+                    return addDoc(collection(db, actionItemsColPath), itemData);
+                });
+                
+                await Promise.all(createActionItemPromises);
+                
+                // 4. 完成，切換到顯示畫面
+                currentMeetingId = newMeetingId;
+
+                // 修正：移除手動 unshift 和 renderMeetingsList()
+                // onSnapshot 會自動處理列表更新
+
+                // 為了讓 UI 立刻反應，我們手動觸發顯示
+                const newMeeting = { id: newMeetingId, ...meetingData };
+                renderMeetingDisplay(newMeeting); // 顯示新會議
+
+            } catch (error) {
+                console.error("Error saving meeting:", error);
+                // 顯示自訂的錯誤 Modal
+                showErrorModal(`儲存失敗：${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- (重構) 更新待辦事項狀態 ---
+        async function updateActionItemStatus(itemId, newStatus) {
+            if (!userId || !itemId) return;
+            
+            try {
+                const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
+                await updateDoc(itemDocRef, {
+                    status: newStatus
+                });
+                // onSnapshot 會自動處理 UI 更新
+            } catch (error) {
+                console.error("Error updating status:", error);
+                // 這裡可以選擇性顯示錯誤，但通常狀態更新失敗可以容忍短暫不一致
+            }
+        }
+
+        // --- (重構) 更新待辦事項內容 (任務和負責人) ---
+        async function updateActionItemDetails(itemId, newItemText, newResponsibleText) {
+            if (!userId || !itemId || !newItemText) return;
+
+            showLoading('更新待辦事項中...');
+            try {
+                const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
+                await updateDoc(itemDocRef, {
+                    item: newItemText,
+                    responsible: newResponsibleText || '未指定'
+                });
+                // onSnapshot 會自動處理 UI 更新並關閉編輯模式
+            } catch (error) {
+                console.error("Error updating action item details:", error);
+                showErrorModal("更新待辦事項失敗。");
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // --- (重構) 編輯進度留言 ---
+        async function updateProgressUpdateText(itemId, progressTimestampMillis, newText) {
+            if (!userId || !itemId) return;
+            
+            showLoading('更新留言中...');
+            const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
+
+            try {
+                const docSnap = await getDoc(itemDocRef);
+                if (!docSnap.exists()) {
+                    throw new Error("找不到待辦事項");
+                }
+                
+                const itemData = docSnap.data();
+                const currentProgress = itemData.progress || [];
+
+                const progressIndex = currentProgress.findIndex(p => p.createdAt?.toMillis() === progressTimestampMillis);
+
+                if (progressIndex === -1) {
+                    // 如果找不到精確的時間戳 (可能是因為本地延遲)，嘗試找最接近的
+                    // 簡易回退：如果找不到，就當作錯誤
+                    console.warn(`Could not find progress item with timestamp ${progressTimestampMillis}`);
+                    throw new Error("找不到該留言");
+                }
+
+                // 複製並更新
+                const updatedProgress = [...currentProgress];
+                updatedProgress[progressIndex] = {
+                    ...updatedProgress[progressIndex],
+                    text: newText
+                };
+                
+                await updateDoc(itemDocRef, {
+                    progress: updatedProgress
+                });
+                // onSnapshot 會自動處理 UI 更新
+            } catch (error) {
+                console.error("Error updating progress text:", error);
+                showErrorModal("更新留言失敗。");
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // --- (重構) 新增進度更新 ---
+        async function addProgressUpdate(itemId, updateText) {
+            if (!userId || !itemId || !updateText.trim()) return;
+
+            const newUpdate = {
+                text: updateText.trim(),
+                createdAt: Timestamp.now()
+            };
+
+            showLoading('新增進度中...');
+            const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
+
+            try {
+                const docSnap = await getDoc(itemDocRef);
+                if (!docSnap.exists()) {
+                    throw new Error("找不到待辦事項");
+                }
+
+                const itemData = docSnap.data();
+                const currentProgress = itemData.progress || [];
+
+                // 將新更新加到陣列 (最新的在最前面)
+                const updatedProgress = [newUpdate, ...currentProgress];
+
+                await updateDoc(itemDocRef, {
+                    progress: updatedProgress
+                });
+                // onSnapshot 會自動處理 UI 更新
+            } catch (error) {
+                console.error("Error adding progress update:", error);
+                showErrorModal("新增進度失敗。");
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // --- 新增：下載會議記錄 ---
+        function downloadMeetingMinutes(meeting) {
+            // 1. 取得此會議的待辦事項
+            const meetingActionItems = globalActionItems.filter(item => item.meetingId === meeting.id);
+            
+            // 2. 建立待辦事項的 HTML
+            let actionItemsHtml = '<h3>尚無待辦事項</h3>';
+            if (meetingActionItems.length > 0) {
+                actionItemsHtml = '<ul style="list-style-type: disc; margin-left: 20px;">';
+                meetingActionItems.forEach(item => {
+                    actionItemsHtml += `
+                        <li>
+                            <strong>${escapeHTML(item.item)}</strong> (負責人: ${escapeHTML(item.responsible || '未指定')}) - 狀態: ${escapeHTML(item.status)}
+                        </li>
+                    `;
+                });
+                actionItemsHtml += '</ul>';
+            }
+
+            // 3. 建立完整的 HTML 內容
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="zh-Hant">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${escapeHTML(meeting.title)}</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
+                        h1 { color: #333; }
+                        h2 { color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+                        p { color: #444; }
+                        ul { margin-bottom: 20px; }
+                        .summary { background: #f4f7f6; padding: 15px; border-left: 4px solid #4a90e2; }
+                        .notes { white-space: pre-wrap; background: #f9f9f9; padding: 10px; border: 1px solid #eee; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${escapeHTML(meeting.title)}</h1>
+                    <p><strong>會議日期:</strong> ${formatDate(meeting.createdAt)}</p>
+                    <p><strong>會議記錄:</strong> ${escapeHTML(meeting.recorder || '未記錄')}</p>
+                    <p><strong>出席人員:</strong> ${escapeHTML(meeting.attendees ? meeting.attendees.join(', ') : '未記錄')}</p>
+                    
+                    <h2>AI 摘要</h2>
+                    <div class="summary">
+                        ${meeting.summary || '無'}
+                    </div>
+                    
+                    <h2>待辦事項</h2>
+                    ${actionItemsHtml}
+                    
+                    <h2>原始筆記</h2>
+                    <div class="notes">${escapeHTML(meeting.notes)}</div>
+                    
+                </body>
+                </html>
+            `;
+            
+            // 4. 建立並觸發下載
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${meeting.title || '會議記錄'}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+
+        // --- 視圖切換 ---
+        function switchView(viewName) {
+            currentView = viewName;
+            
+            // 更新按鈕外觀
+            viewToggleBtns.forEach(btn => {
+                if (btn.dataset.view === viewName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // 根據視圖顯示/隱藏元素
+            if (viewName === 'meetings') {
+                sidebarEl.style.display = 'flex'; // 顯示側邊欄
+                
+                // 決定顯示表單還是會議
+                if (currentMeetingId) {
+                    const meeting = meetings.find(m => m.id === currentMeetingId);
+                    if(meeting) renderMeetingDisplay(meeting);
+                    else showNewMeetingForm();
+                } else {
+                    showNewMeetingForm();
+                }
+                
+                // 確保會議列表是最新的
+                renderMeetingsList();
+
+            } else if (viewName === 'todos') {
+                sidebarEl.style.display = 'none'; // 隱藏側邊欄
+                
+                // 隱藏會議相關, 顯示全域待辦
+                meetingFormEl.style.display = 'none';
+                meetingDisplayEl.style.display = 'none';
+                todosViewEl.style.display = 'block';
+                
+                // 渲染全域待辦
+                renderGlobalTodosList();
+            }
+        }
+
+
+        // --- 啟動 ---
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 在此處填充 DOM 元素 ---
+            meetingsListEl = document.getElementById('meetings-list');
+            mainContentEl = document.getElementById('main-content');
+            meetingFormEl = document.getElementById('meeting-form');
+            meetingDisplayEl = document.getElementById('meeting-display');
+            todosViewEl = document.getElementById('todos-view');
+            globalTodosListEl = document.getElementById('global-todos-list');
+            loadingOverlay = document.getElementById('loading-overlay');
+            authStatusEl = document.getElementById('auth-status');
+            newMeetingBtn = document.getElementById('new-meeting-btn');
+            viewToggleContainer = document.getElementById('view-toggle-container');
+            viewToggleBtns = document.querySelectorAll('.tab-btn');
+            sidebarEl = document.getElementById('sidebar');
+            errorOverlay = document.getElementById('error-overlay');
+            errorMessageText = document.getElementById('error-message-text');
+            closeErrorBtn = document.getElementById('close-error-btn');
+
+            // --- 綁定事件 ---
+            meetingFormEl.addEventListener('submit', handleFormSubmit);
+            newMeetingBtn.addEventListener('click', showNewMeetingForm);
+            viewToggleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchView(btn.dataset.view);
+                });
+            });
+            closeErrorBtn.addEventListener('click', hideErrorModal);
+
+            // --- 初始化 Firebase ---
+            initFirebase();
+
+            // --- 初始顯示 ---
+            switchView('meetings');
+            showNewMeetingForm();
+        });
+
+    </script>
+</body>
+</html>
