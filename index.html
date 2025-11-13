@@ -17,7 +17,7 @@
         // *** 步驟 6：將您在 Firebase 取得的 CONFIG 貼在這裡 ***
         // *** (這只是範例，請務必替換成您自己的！) ***
         const firebaseConfig = {
-           apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
+            apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
   authDomain: "my-meeting-system.firebaseapp.com",
   projectId: "my-meeting-system",
   storageBucket: "my-meeting-system.firebasestorage.app",
@@ -119,7 +119,7 @@
             confirmModal.classList.add('hidden');
         }
 
-        // --- *** 修正：補回待辦事項 Modal 函式 *** ---
+        // --- 待辦事項 Modal 函式 ---
         function showModal() { 
             editModal.classList.remove('hidden'); 
         }
@@ -128,7 +128,6 @@
             modalActionTitle.classList.remove('border-red-500');
             modalActionOwner.classList.remove('border-red-500');
         }
-        // --- *** 結束修正 *** ---
 
         // --- 草稿儲存 (Firebase 版) ---
         // Debounce 函數防止儲存過於頻繁
@@ -471,6 +470,7 @@
             if (decisions.length > 0) {
                 decisions.forEach((text, i) => { textOutput += `${i + 1}. ${text}\n`; });
             } else { textOutput += '無\n'; }
+            
             textOutput += '\n--- 發言記錄 (討論串) ---\n';
             if (discussionLog.length > 0) {
                 discussionLog.forEach((topic) => { 
@@ -484,6 +484,7 @@
                 });
             } else { textOutput += '無\n'; }
             textOutput += '\n'; 
+            
             textOutput += '--- 臨時動議 ---\n';
             const motions = discussionLog ? discussionLog.filter(log => log.isMotion) : [];
             if (motions.length > 0) {
@@ -508,7 +509,9 @@
         // 監聽「待辦事項」集合
         function setupActionListeners() {
             if (actionsUnsubscribe) actionsUnsubscribe(); // 取消舊的監聽
-            const actionsQuery = query(collection(db, 'actions'));
+            // *** 修改：確保查詢是針對目前登入者 ***
+            // *** 假設待辦事項是全團隊共享，所以查詢 actions 集合 ***
+            const actionsQuery = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
             actionsUnsubscribe = onSnapshot(actionsQuery, (snapshot) => {
                 actions = [];
                 snapshot.forEach((doc) => {
@@ -521,6 +524,7 @@
         // 監聽「會議」集合
         function setupMeetingListeners() {
             if (meetingsUnsubscribe) meetingsUnsubscribe();
+             // *** 假設會議是全團隊共享 ***
             const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
             meetingsUnsubscribe = onSnapshot(meetingsQuery, (snapshot) => {
                 meetings = [];
@@ -683,17 +687,19 @@
                             setupDraftListener(currentUserId);
                         } else {
                             // --- 權限不足 ---
+                            // *** 修改：不再強制登出 ***
+                            // await signOut(auth); 
                             const loginErrorEl = document.getElementById('login-message');
                             loginErrorEl.textContent = `您的帳號 (${currentUserEmail}) 未被授權存取此系統。請聯繫管理員。`;
                             loginErrorEl.classList.add('text-red-600', 'font-bold');
-                            await signOut(auth); // 強制登出
                         }
                     } catch (error) {
                         console.error("檢查權限失敗:", error);
+                        // *** 修改：不再強制登出 ***
+                        // await signOut(auth); 
                         const loginErrorEl = document.getElementById('login-message');
                         loginErrorEl.textContent = `檢查權限時發生錯誤，請稍後再試。`;
                         loginErrorEl.classList.add('text-red-600', 'font-bold');
-                        await signOut(auth); // 強制登出
                     }
                     
                 } else {
@@ -728,8 +734,15 @@
             // --- 綁定分頁事件 ---
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.classList.remove('bg-blue-50', 'text-blue-600', 'font-semibold');
+                        btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    });
                     button.classList.add('active');
+                    button.classList.add('bg-blue-50', 'text-blue-600', 'font-semibold');
+                    button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+
                     const targetTab = button.dataset.tab;
                     tabContents.forEach(content => content.classList.remove('active'));
                     document.getElementById(targetTab).classList.add('active');
@@ -976,7 +989,7 @@
                     const topicIndex = discussionLog.findIndex(t => t.id === topicId);
                     if (topicIndex === -1) return;
                     const replyCount = discussionLog[topicIndex].replies.length;
-                    showConfirmModal('刪除話題', `您確定要刪除这个話題嗎？此話題下的 ${replyCount} 筆回應將一併被刪除。`, "確認刪除", () => {
+                    showConfirmModal('刪除話題', `您確定要刪除這個話題嗎？此話題下的 ${replyCount} 筆回應將一併被刪除。`, "確認刪除", () => {
                         discussionLog.splice(topicIndex, 1);
                         renderDiscussionLog();
                         if (editingTopicId === topicId) resetLogForm();
@@ -1363,7 +1376,7 @@
             <div class="mb-8">
                 <div class="border-b border-slate-200">
                     <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                        <button class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-meeting">
+                        <button class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-blue-600 bg-blue-50" data-tab="tab-meeting">
                             本次會議記錄
                         </button>
                         <button class="tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-actions">
@@ -1603,16 +1616,18 @@
         /* *** 修改：分頁樣式 *** */
         .tab-btn {
             border-color: transparent; /* 預設無底線 */
-            transition: color 0.2s ease, border-color 0.2s ease;
+            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+            font-weight: 500; /* 預設中等 */
+            border-radius: 6px 6px 0 0;
         }
         .tab-btn.active { 
             border-color: #3b82f6; /* blue-500 */
             color: #2563eb; /* blue-600 */
-            font-weight: 600;
+            font-weight: 600; /* Active 時加粗 */
+            background-color: #eff6ff; /* blue-50 */
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
 </body>
 </html>
-
