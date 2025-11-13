@@ -3,1511 +3,1584 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 會議助理 (修正版)</title>
-    <!-- 引入 Tailwind CSS -->
+    <title>會議記錄系統 (團隊版)</title>
+    <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Ionicons v7 -->
-    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.js"></script>
-    <style>
-        /* 使用 Inter 字體 */
-        body {
-            font-family: "Inter", sans-serif;
-        }
-        /* 載入中動畫 */
-        .loader {
-            border-top-color: #3498db;
-            -webkit-animation: spin 1s linear infinite;
-            animation: spin 1s linear infinite;
-        }
-        @-webkit-keyframes spin {
-            0% { -webkit-transform: rotate(0deg); }
-            100% { -webkit-transform: rotate(360deg); }
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* 客製化捲軸 */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 3px;
-        }
-        /* 活躍的分頁按鈕 */
-        .tab-btn.active {
-            background-color: #ffffff;
-            color: #2563eb;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-        }
-        .tab-btn {
-            background-color: #e2e8f0;
-            color: #475569;
-        }
-        /* 增加下載按鈕樣式 */
-        .download-btn {
-            background-color: #10b981; /* green-500 */
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .download-btn:hover {
-            background-color: #059669; /* green-600 */
-        }
-        /* 負責人標籤樣式 */
-        .responsible-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem; /* 4px */
-            background-color: #e0e7ff; /* indigo-100 */
-            color: #3730a3; /* indigo-800 */
-            font-size: 0.75rem; /* 12px */
-            font-weight: 500;
-            padding: 0.125rem 0.5rem; /* 2px 8px */
-            border-radius: 9999px; /* rounded-full */
-            margin-top: 0.25rem; /* 4px */
-        }
-        /* 刪除按鈕樣式 */
-        .delete-btn {
-            background-color: #fee2e2; /* red-100 */
-            color: #991b1b; /* red-800 */
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .delete-btn:hover {
-            background-color: #fecaca; /* red-200 */
-        }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800">
-
-    <!-- Firebase SDK -->
+    <!-- 使用 Inter 字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- *** 新增：載入 Firebase SDK *** -->
+    <!-- 建議使用最新版本，但 9.x 版是穩定的 -->
     <script type="module">
-        // 匯入 Firebase 模組
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import {
-            getAuth,
-            signInAnonymously,
-            signInWithCustomToken,
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import {
-            getFirestore,
-            doc,
-            addDoc,
-            updateDoc,
-            deleteDoc,
-            onSnapshot,
-            collection,
-            query,
-            getDoc,
-            getDocs,
-            where,
-            writeBatch,
-            Timestamp,
-            setLogLevel
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // *** 步驟 6：將您在 Firebase 取得的 CONFIG 貼在這裡 ***
+        // *** (這只是範例，請務必替換成您自己的！) ***
+
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! 錯誤修正：您必須將下方的範例 'firebaseConfig'                !!!
+        // !!! 完整替換成您在 Firebase 專案中取得的「您自己的」設定碼。       !!!
+        // !!! 目前的 'apiKey' 是無效的範例，這就是導致 'auth/api-key-not-valid' 錯誤的原因。 !!!
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        const firebaseConfig = {
+           apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
+  authDomain: "my-meeting-system.firebaseapp.com",
+  projectId: "my-meeting-system",
+  storageBucket: "my-meeting-system.firebasestorage.app",
+  messagingSenderId: "856697883973",
+  appId: "1:856697883973:web:5dc8f04c7ec9d8d583822c"
+        };
+
+        // ----------------------------------------------------
+        // --- 下方的程式碼您不需要修改 ---
+        // ----------------------------------------------------
+
+        // 載入 Firebase 模組
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            onSnapshot, 
+            addDoc, 
+            updateDoc, 
+            deleteDoc, 
+            setDoc, 
+            query, 
+            orderBy, 
+            serverTimestamp,
+            writeBatch
+        } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        // --- 初始化 Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
 
         // --- 全域變數 ---
-        let db, auth, userId, appId;
-        let meetings = []; // 儲存會議資料
-        let globalActionItems = []; // 儲存所有待辦事項
-        let currentMeetingId = null; // 當前選中的會議 ID
-        let currentView = 'meetings'; // 'meetings' 或 'todos'
-        let currentMeetingDataForForm = null; // 用於儲存表單的當前會議資料
+        let currentUserId = null;
+        let currentUserEmail = null;
+        
+        let decisions = [];
+        let editingDecisionIndex = null; 
+        let actions = []; 
+        let discussionLog = []; 
+        let editingTopicId = null; 
+        let meetings = []; 
+        let editingMeetingId = null; 
 
-        // Gemini API 金鑰 (保留為空字串)
-        const geminiApiKey = "AIzaSyC3B7oMvk9Jg3Rzp8R6Hna0JdYwyoeQdi8";
-        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`;
+        // Firebase 監聽器 (用於即時取消訂閱)
+        let actionsUnsubscribe = null;
+        let meetingsUnsubscribe = null;
+        let draftUnsubscribe = null;
+        
+        // --- 獲取 DOM 元素 ---
+        let mainContentContainer, loginOverlay, appContainer, userStatus, logoutBtn, loginBtn;
+        let tabButtons, tabContents;
+        let minutesForm, outputContainer, formattedMinutes, copyBtn, resetBtn, copySuccess, clipboardHelper, downloadBtn, generateMinutesBtn;
+        let addDecisionBtn, decisionInput, decisionsList;
+        let addActionBtn, actionTitle, actionNotes, actionOwner, actionDue, actionsList, actionError;
+        let editModal, cancelEditBtn, saveActionBtn, modalActionId, modalActionTitle, modalActionNotes, modalActionOwner, modalActionDue, modalActionStatus, modalActionHistory, modalActionUpdate;
+        let addLogBtn, logSpeaker, logStatement, logList, logError, logIsMotion;
+        let replyModal, replyModalTitle, replyToStatement, replyTopicId, replyId, replySpeaker, replyStatement, cancelReplyBtn, saveReplyBtn;
+        let viewPastMeetingsBtn, pastMeetingsModal, closePastModalBtn, pastMeetingsList, pastMeetingContent;
+        let confirmModal, confirmTitle, confirmMessage, confirmCancelBtn, confirmOkBtn;
+        
+        // --- 顏色地圖 ---
+        let personColorMap = new Map(); 
+        const colorClasses = [ 
+            'border-blue-400', 'border-green-400', 'border-purple-400', 
+            'border-pink-400', 'border-yellow-500', 'border-red-400', 
+            'border-indigo-400', 'border-teal-400'
+        ];
+        function getPersonColorClass(name) { 
+            if (!name || name.trim() === '') return 'border-slate-300'; 
+            const trimmedName = name.trim();
+            if (personColorMap.has(trimmedName)) return personColorMap.get(trimmedName);
+            const newColorClass = colorClasses[personColorMap.size % colorClasses.length];
+            personColorMap.set(trimmedName, newColorClass);
+            return newColorClass;
+        }
 
-        // UI 元素 (延後到 DOMContentLoaded 中初始化)
-        let meetingsListEl, mainContentEl, meetingFormEl, meetingDisplayEl, todosViewEl,
-            globalTodosListEl, loadingOverlay, authStatusEl, newMeetingBtn, viewToggleContainer,
-            viewToggleBtns, sidebarEl, errorOverlay, errorMessageText, closeErrorBtn,
-            confirmOverlay, confirmMessageText, confirmBtn, cancelConfirmBtn,
-            displayActionItemsListEl, formAiSummaryEl, formAiActionItemsEl,
-            formSaveBtn, formAiBtn;
+        // --- 通用 Modal ---
+        let confirmCallback = null; 
+        function showConfirmModal(title, message, okText = "確認刪除", onConfirm) {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmOkBtn.textContent = okText;
+            confirmCallback = onConfirm; 
+            confirmModal.classList.remove('hidden');
+        }
+        function hideConfirmModal() {
+            confirmCallback = null;
+            confirmModal.classList.add('hidden');
+        }
 
-        // --- Firebase 初始化與認證 ---
-        async function initFirebase() {
-            try {
-                // 修正：檢查 Canvas 環境變數
-                let firebaseConfig;
-                let isCanvasEnv = typeof __firebase_config !== 'undefined' && __firebase_config;
+        // --- *** 修正：補回待辦事項 Modal 函式 *** ---
+        function showModal() { 
+            editModal.classList.remove('hidden'); 
+        }
+        function hideModal() { 
+            editModal.classList.add('hidden'); 
+            modalActionTitle.classList.remove('border-red-500');
+            modalActionOwner.classList.remove('border-red-500');
+        }
+        // --- *** 結束修正 *** ---
 
-                if (isCanvasEnv) {
-                    // 環境 1: 在 Canvas 預覽中
-                    firebaseConfig = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                } else {
-                    // 環境 2: 在 GitHub Pages 或本地開發
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    // !! 重要 !!
-                    // !! 如果您要部署到 GitHub Pages，必須在此處填入您自己的 Firebase 專案設定
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    firebaseConfig = {
-                         apiKey: "AIzaSyDhlVBTqQsQ14Ew9PnFgW5_EYRUN0NxH_k",
-                          authDomain: "meeting-minutes-dc6f2.firebaseapp.com",
-                          projectId: "meeting-minutes-dc6f2",
-                          storageBucket: "meeting-minutes-dc6f2.firebasestorage.app",
-                          messagingSenderId: "679866135791",
-                          appId: "1:679866135791:web:8e1edac3a0ddf17328171a"
+        // --- 草稿儲存 (Firebase 版) ---
+        // Debounce 函數防止儲存過於頻繁
+        let draftSaveTimeout;
+        function saveDraft() {
+            if (!currentUserId) return; // 未登入，不儲存
+            if (draftSaveTimeout) clearTimeout(draftSaveTimeout);
+
+            draftSaveTimeout = setTimeout(async () => {
+                try {
+                    const draft = {
+                        title: document.getElementById('meeting-title').value,
+                        date: document.getElementById('meeting-date').value,
+                        location: document.getElementById('meeting-location').value,
+                        recorder: document.getElementById('meeting-recorder').value,
+                        attendees: document.getElementById('meeting-attendees').value,
+                        agenda: document.getElementById('meeting-agenda').value,
+                        decisions: decisions,
+                        discussionLog: discussionLog,
+                        updatedAt: serverTimestamp() // 標記時間
                     };
-                    appId = firebaseConfig.appId || 'default-app-id';
-
-                    // 檢查金鑰是否已被替換
-                    if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_OWN_API_KEY") {
-                        const errorMsg = "設定錯誤：應用程式無法連接到資料庫。請依照程式碼 'firebaseConfig' 物件上方的註解，填入您自己的 Firebase 專案金鑰。";
-                        authStatusEl.textContent = "錯誤：Firebase 設定尚未替換。";
-                        showErrorModal(errorMsg);
-                        return;
-                    }
+                    // 使用 setDoc (合併) 來儲存或更新
+                    const draftRef = doc(db, 'drafts', currentUserId);
+                    await setDoc(draftRef, draft, { merge: true });
+                } catch (e) {
+                    console.error("自動儲存草稿失敗:", e);
                 }
+            }, 1000); // 延遲 1 秒儲存
+        }
 
-                // 設定 Firestore log 等級
-                setLogLevel('Debug');
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // 監聽認證狀態
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        authStatusEl.textContent = `使用者 ID: ${userId.substring(0, 8)}... (已登入)`;
-                        listenToMeetings();
-                        listenToGlobalActionItems();
-                    } else {
-                        // 嘗試登入
-                        try {
-                            if (isCanvasEnv && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                // Canvas 環境使用 Token
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                // GitHub Pages 或其他環境，使用匿名登入
-                                await signInAnonymously(auth);
-                            }
-                        } catch (error) {
-                            console.error("Auth error:", error);
-                            authStatusEl.textContent = "認證失敗";
-                            showErrorModal(`認證失敗: ${error.message}`);
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                authStatusEl.textContent = "應用程式初始化失敗。";
-                showErrorModal(`初始化失敗: ${error.message}`);
+        async function clearDraft() {
+            if (!currentUserId) return;
+            try {
+                const draftRef = doc(db, 'drafts', currentUserId);
+                await deleteDoc(draftRef);
+                console.log("草稿已清除");
+            } catch (e) {
+                console.error("清除草稿失敗:", e);
             }
-        }
-
-        // --- Firestore 資料監聽 ---
-
-        // 監聽會議
-        function listenToMeetings() {
-            if (!userId) return;
-            const meetingsColPath = `artifacts/${appId}/users/${userId}/meetings`;
-            const q = query(collection(db, meetingsColPath));
-
-            onSnapshot(q, (snapshot) => {
-                meetings = [];
-                snapshot.forEach((doc) => {
-                    meetings.push({ id: doc.id, ...doc.data() });
-                });
-                meetings.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-
-                if (currentView === 'meetings') {
-                    renderMeetingsList();
-                }
-            }, (error) => {
-                console.error("Error listening to meetings:", error);
-            });
-        }
-
-        // 監聽全域待辦事項
-        function listenToGlobalActionItems() {
-            if (!userId) return;
-            const actionItemsColPath = `artifacts/${appId}/users/${userId}/actionItems`;
-            const q = query(collection(db, actionItemsColPath));
-
-            onSnapshot(q, (snapshot) => {
-                globalActionItems = [];
-                snapshot.forEach((doc) => {
-                    globalActionItems.push({ id: doc.id, ...doc.data() });
-                });
-                globalActionItems.sort((a, b) => {
-                    const statusA = a.status === 'done' ? 1 : 0;
-                    const statusB = b.status === 'done' ? 1 : 0;
-                    if (statusA !== statusB) return statusA - statusB;
-                    const timeA = a.createdAt?.toMillis() || 0;
-                    const timeB = b.createdAt?.toMillis() || 0;
-                    return timeB - timeA;
-                });
-
-                if (currentView === 'todos') {
-                    renderGlobalTodosList();
-                }
-
-                if (currentView === 'meetings' && currentMeetingId) {
-                    const meetingData = meetings.find(m => m.id === currentMeetingId);
-                    if (meetingData) {
-                        // 判斷當前在顯示頁還是表單頁
-                        if (meetingFormEl.style.display === 'block') {
-                            // 僅更新表單內的待辦事項
-                            renderActionItemsForForm(currentMeetingId);
-                        } else if (meetingDisplayEl.style.display === 'block') {
-                            // 更新顯示頁的待辦事項
-                            renderMeetingDisplay(meetingData);
-                        }
-                    }
-                }
-            }, (error) => {
-                console.error("Error listening to global action items:", error);
-            });
-        }
-
-        // --- 畫面渲染 ---
-
-        // 渲染左側會議列表
-        function renderMeetingsList() {
-            meetingsListEl.innerHTML = '';
-            if (meetings.length === 0) {
-                meetingsListEl.innerHTML = '<p class="p-4 text-slate-500">尚無會議記錄。</p>';
-                return;
-            }
-
-            meetings.forEach(meeting => {
-                const li = document.createElement('li');
-                li.className = `border-b border-slate-200 ${currentMeetingId === meeting.id ? 'bg-blue-100' : 'hover:bg-slate-50'}`;
-                li.innerHTML = `
-                    <button class="w-full text-left p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" data-id="${meeting.id}">
-                        <h3 class="font-semibold text-slate-900 truncate">${meeting.title || '未命名會議'}</h3>
-                        <p class="text-sm text-slate-500">${formatDate(meeting.createdAt)}</p>
-                    </button>
-                `;
-                li.querySelector('button').addEventListener('click', () => {
-                    currentMeetingId = meeting.id;
-                    renderMeetingsList();
-                    const selectedMeeting = meetings.find(m => m.id === currentMeetingId);
-                    if (selectedMeeting) {
-                        renderMeetingDisplay(selectedMeeting);
-                    }
-                });
-                meetingsListEl.appendChild(li);
-            });
-        }
-
-        // 顯示新會議表單
-        function showNewMeetingForm() {
-            currentMeetingId = null;
-            currentMeetingDataForForm = null;
-            meetingFormEl.style.display = 'block';
-            meetingDisplayEl.style.display = 'none';
-            todosViewEl.style.display = 'none';
-
-            meetingFormEl.querySelector('form').reset();
-            document.getElementById('form-title').textContent = '新增會議記錄';
-            formAiSummaryEl.innerHTML = '<p class="text-slate-500 italic">點擊「AI 分析」按鈕以產生摘要。</p>';
-            formAiActionItemsEl.innerHTML = '<p class="text-slate-500 italic">點擊「AI 分析」按鈕以提取待辦事項。</p>';
-
-            updateFormButtons(false, false);
-            renderMeetingsList();
-        }
-
-        // 顯示已儲存的會議 (檢視模式)
-        function renderMeetingDisplay(meeting) {
-            meetingFormEl.style.display = 'none';
-            meetingDisplayEl.style.display = 'block';
-            todosViewEl.style.display = 'none';
-
-            document.getElementById('display-title').textContent = meeting.title || '未命名會議';
-            document.getElementById('display-date').textContent = formatDate(meeting.createdAt);
-            document.getElementById('display-recorder').textContent = `會議記錄: ${meeting.recorder || '未記錄'}`;
-            document.getElementById('display-attendees').textContent = `出席者: ${meeting.attendees ? meeting.attendees.join(', ') : '未記錄'}`;
-
-            document.getElementById('display-notes').innerHTML = `
-                <h3 class="text-xl font-semibold mb-3 text-slate-700">原始筆記</h3>
-                <div class="prose prose-slate max-w-none bg-white p-4 rounded-md border border-slate-200 whitespace-pre-wrap">${escapeHTML(meeting.notes) || '無'}</div>
-            `;
-            document.getElementById('display-summary').innerHTML = `
-                <h3 class="text-xl font-semibold mb-3 text-slate-700">AI 摘要</h3>
-                <div class="prose prose-slate max-w-none bg-white p-4 rounded-md border border-slate-200">${meeting.summary || '無'}</div>
-            `;
-
-            // 渲染待辦事項
-            displayActionItemsListEl.innerHTML = '';
-            const meetingActionItems = globalActionItems.filter(item => item.meetingId === meeting.id);
-
-            if (meetingActionItems.length > 0) {
-                meetingActionItems.forEach(item => {
-                    const li = createActionItemElement(item, false); // 不顯示會議標題
-                    displayActionItemsListEl.appendChild(li);
-                });
-                attachActionItemListeners(displayActionItemsListEl);
-            } else {
-                displayActionItemsListEl.innerHTML = '<p class="p-4 text-slate-500">沒有待辦事項。</p>';
-            }
-
-            // 下載按鈕
-            const downloadBtnContainer = document.getElementById('download-btn-container');
-            downloadBtnContainer.innerHTML = '';
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-btn';
-            downloadBtn.innerHTML = `<ion-icon name="download-outline"></ion-icon><span>下載 (HTML)</span>`;
-            downloadBtn.addEventListener('click', () => downloadMeetingMinutes(meeting));
-            downloadBtnContainer.appendChild(downloadBtn);
-
-            // 編輯按鈕
-            const editBtnContainer = document.getElementById('edit-btn-container');
-            editBtnContainer.innerHTML = '';
-            const editBtn = document.createElement('button');
-            editBtn.className = 'bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out flex items-center justify-center gap-1 text-sm';
-            editBtn.innerHTML = `<ion-icon name="pencil-outline" class="text-base"></ion-icon><span>編輯</span>`;
-            editBtn.addEventListener('click', () => showEditMeetingForm(meeting));
-            editBtnContainer.appendChild(editBtn);
-            
-            // 刪除按鈕
-            const deleteBtnContainer = document.getElementById('delete-btn-container');
-            deleteBtnContainer.innerHTML = '';
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn text-sm py-2 px-4';
-            deleteBtn.innerHTML = `<ion-icon name="trash-outline" class="text-base"></ion-icon><span>刪除會議</span>`;
-            deleteBtn.addEventListener('click', () => {
-                showConfirmModal(
-                    '您確定要刪除這場會議嗎？',
-                    '此操作將同時刪除所有相關的待辦事項，且無法復原。',
-                    () => deleteMeeting(meeting.id)
-                );
-            });
-            deleteBtnContainer.appendChild(deleteBtn);
-        }
-
-        // 顯示編輯會議表單
-        function showEditMeetingForm(meeting) {
-            currentMeetingId = meeting.id;
-            currentMeetingDataForForm = meeting; // 儲存當前資料
-            meetingFormEl.style.display = 'block';
-            meetingDisplayEl.style.display = 'none';
-            todosViewEl.style.display = 'none';
-
-            document.getElementById('form-title').textContent = '編輯會議記錄';
-            document.getElementById('meeting-title').value = meeting.title || '';
-            document.getElementById('meeting-recorder').value = meeting.recorder || '';
-            document.getElementById('meeting-attendees').value = meeting.attendees ? meeting.attendees.join(', ') : '';
-            document.getElementById('meeting-notes').value = meeting.notes || '';
-
-            formAiSummaryEl.innerHTML = meeting.summary ? 
-                `<div class="prose prose-slate max-w-none">${meeting.summary}</div>` : 
-                '<p class="text-slate-500 italic">點擊「AI 分析」按鈕以產生摘要。</p>';
-
-            renderActionItemsForForm(meeting.id);
-            updateFormButtons(true, false); // 已儲存，未分析
         }
         
-        // 顯示全域待辦事項列表
-        function renderGlobalTodosList() {
-            meetingFormEl.style.display = 'none';
-            meetingDisplayEl.style.display = 'none';
-            todosViewEl.style.display = 'block';
-            globalTodosListEl.innerHTML = '';
-
-            if (globalActionItems.length === 0) {
-                globalTodosListEl.innerHTML = '<p class="p-4 text-slate-500">太好了！沒有任何待辦事項。</p>';
+        // --- 渲染函式 (與 localStorage 版相同) ---
+        function renderDecisions() {
+             decisionsList.innerHTML = '';
+             if (decisions.length === 0) {
+                 decisionsList.innerHTML = '<p class="text-slate-500 text-center">目前沒有重要決議。</p>';
+                 return;
+             }
+            decisions.forEach((text, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm';
+                item.innerHTML = `
+                    <span class="text-slate-800 flex-grow">${index + 1}. ${text}</span>
+                    <div class="flex-shrink-0 ml-4 flex space-x-1">
+                        <button type="button" data-index="${index}" class="edit-decision-btn text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="編輯">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                        </button>
+                        <button type="button" data-index="${index}" class="remove-decision-btn text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="移除">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6zm2 2a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1zm4 0a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                `;
+                decisionsList.appendChild(item);
+            });
+        }
+        function renderDiscussionLog() {
+            const listEl = document.querySelector('#tab-meeting #log-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            if (discussionLog.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-500 text-center">目前沒有發言記錄。</p>';
                 return;
             }
-
-            const pendingItems = globalActionItems.filter(item => item.status !== 'done');
-            const doneItems = globalActionItems.filter(item => item.status === 'done');
-
-            if (pendingItems.length > 0) {
-                globalTodosListEl.innerHTML += `<h3 class="text-xl font-semibold mb-3 text-slate-700">進行中 (${pendingItems.length})</h3>`;
-                const pendingList = document.createElement('ul');
-                pendingList.className = 'space-y-3';
-                pendingItems.forEach(item => {
-                    const li = createActionItemElement(item, true); // 顯示會議標題
-                    pendingList.appendChild(li);
-                });
-                globalTodosListEl.appendChild(pendingList);
-            }
-
-            if (doneItems.length > 0) {
-                globalTodosListEl.innerHTML += `<h3 class="text-xl font-semibold mb-3 mt-8 text-slate-500">已完成 (${doneItems.length})</h3>`;
-                const doneList = document.createElement('ul');
-                doneList.className = 'space-y-3';
-                doneItems.forEach(item => {
-                    const li = createActionItemElement(item, true);
-                    li.classList.add('opacity-70');
-                    doneList.appendChild(li);
-                });
-                globalTodosListEl.appendChild(doneList);
-            }
-            
-            attachActionItemListeners(globalTodosListEl);
-        }
-
-        // --- 共用的待辦事項 UI 產生器 ---
-
-        // (在表單中) 渲染待辦事項
-        function renderActionItemsForForm(meetingId) {
-            formAiActionItemsEl.innerHTML = '';
-            const meetingActionItems = globalActionItems.filter(item => item.meetingId === meetingId);
-
-            if (meetingActionItems.length > 0) {
-                const list = document.createElement('ul');
-                list.className = 'space-y-3';
-                meetingActionItems.forEach(item => {
-                    // 傳入 true 啟用刪除按鈕
-                    const li = createActionItemElement(item, false, true); 
-                    list.appendChild(li);
-                });
-                formAiActionItemsEl.appendChild(list);
-                attachActionItemListeners(formAiActionItemsEl);
-            } else {
-                formAiActionItemsEl.innerHTML = '<p class="text-slate-500 italic">此會議尚無待辦事項。</p>';
-            }
-        }
-
-        // 建立單個待辦事項的 HTML 元素
-        function createActionItemElement(item, showMeetingTitle = false, enableDelete = false) {
-            const li = document.createElement('li');
-            li.className = 'flex flex-col gap-4 p-4 bg-white rounded-lg shadow-sm border border-slate-200 group';
-            li.setAttribute('data-item-id', item.id); 
-
-            // 進度更新列表
-            let progressHtml = '<ul class="space-y-2 mt-3 border-t border-slate-200 pt-3">';
-            if (item.progress && item.progress.length > 0) {
-                const sortedProgress = [...item.progress].sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                sortedProgress.forEach(update => {
-                    const progressTimestamp = update.createdAt?.toMillis() || Date.now(); 
-                    progressHtml += `
-                        <li class="text-sm text-slate-600 break-words group" data-timestamp="${progressTimestamp}">
-                            <div class="progress-display flex justify-between items-start gap-2">
-                                <span class="progress-text flex-1">
-                                    <span class="font-medium text-slate-500">${formatDate(update.createdAt)}:</span>
-                                    ${escapeHTML(update.text)}
-                                </span>
-                                <button class="edit-progress-btn p-1 text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" data-progress-timestamp="${progressTimestamp}">
-                                    <ion-icon name="pencil-outline" class="text-base"></ion-icon>
+            discussionLog.forEach((topic) => {
+                const topicWrapper = document.createElement('div'); 
+                topicWrapper.className = "mb-2";
+                const topicItem = document.createElement('div');
+                const colorClass = getPersonColorClass(topic.speaker);
+                topicItem.className = `flex items-start justify-between bg-white p-3 rounded-lg border border-slate-200 border-l-4 ${colorClass} shadow-sm`;
+                const motionTag = topic.isMotion ? '<span class="ml-2 bg-purple-100 text-purple-700 text-xs font-medium px-2 py-0.5 rounded-full">臨時動議</span>' : '';
+                topicItem.innerHTML = `
+                    <div class="flex-grow">
+                        <div class="flex items-center">
+                            <span class="font-semibold text-slate-900">${topic.speaker}:</span>
+                            ${motionTag}
+                        </div>
+                        <p class="text-slate-800 ml-2" style="white-space: pre-wrap;">${topic.statement}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-4 flex space-x-1 items-center">
+                        <button type="button" data-topic-id="${topic.id}" class="edit-log-btn text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="編輯話題">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                        </button>
+                        <button type="button" data-topic-id="${topic.id}" class="remove-log-btn text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="移除話題">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6zm2 2a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1zm4 0a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                `;
+                topicWrapper.appendChild(topicItem); 
+                const repliesContainer = document.createElement('div');
+                repliesContainer.className = 'ml-6 md:ml-10 mt-2 space-y-2 pl-4 border-l-2 border-slate-300';
+                if (topic.replies && topic.replies.length > 0) {
+                    topic.replies.forEach((reply) => {
+                        const replyItem = document.createElement('div');
+                        const replyColorClass = getPersonColorClass(reply.speaker);
+                        replyItem.className = `flex items-start justify-between bg-white p-2 rounded-lg border border-slate-200 border-l-4 ${replyColorClass} shadow-sm`;
+                        replyItem.innerHTML = `
+                            <div class="flex-grow">
+                                <span class="font-semibold text-slate-800">${reply.speaker}:</span>
+                                <p class="text-slate-700 ml-2" style="white-space: pre-wrap;">${reply.statement}</p>
+                            </div>
+                            <div class="flex-shrink-0 ml-2 flex space-x-1 items-center">
+                                <button type="button" data-topic-id="${topic.id}" data-reply-id="${reply.id}" class="add-decision-reply-btn text-yellow-500 hover:text-yellow-700 p-1.5 rounded-full hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" title="設為重要決議">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                </button>
+                                <button type="button" data-topic-id="${topic.id}" data-reply-id="${reply.id}" class="edit-reply-btn text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="編輯回應">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                </button>
+                                <button type="button" data-topic-id="${topic.id}" data-reply-id="${reply.id}" class="remove-reply-btn text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="移除回應">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6zm2 2a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1zm4 0a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                 </button>
                             </div>
-                            <div class="progress-edit" style="display: none;">
-                                <textarea class="w-full p-2 border border-slate-300 rounded-md text-sm mt-1">${escapeHTML(update.text)}</textarea>
-                                <div class="flex gap-2 mt-1 justify-end">
-                                    <button class="cancel-edit-btn bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs py-1 px-2 rounded">取消</button>
-                                    <button class="save-progress-btn bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded" data-progress-timestamp="${progressTimestamp}">儲存</button>
-                                </div>
-                            </div>
-                        </li>
-                    `;
-                });
-            } else {
-                progressHtml += '<li class="text-sm text-slate-400 italic">尚無進度更新。</li>';
-            }
-            progressHtml += '</ul>';
-
-            // 新增進度表單
-            const progressInputId = `progress-input-${item.id}`;
-            const addProgressHtml = `
-                <div class_E_S_S_ = "flex gap-2 mt-3 border-t border-slate-200 pt-3">
-                    <input type="text" id="${progressInputId}" class="flex-1 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="新增進度說明...">
-                    <button class="add-progress-btn flex-shrink-0 bg-gray-200 hover:bg-gray-300 text-slate-700 font-semibold py-2 px-3 rounded-md text-sm" data-input-id="${progressInputId}">
-                        新增
-                    </button>
-                </div>
-            `;
-
-            const status = item.status || 'todo';
-            const colorClasses = getStatusColorClasses(status);
-            
-            const meetingTitleHtml = showMeetingTitle ? `
-                <p class="text-xs text-blue-600 font-medium mb-1 truncate">
-                    <ion-icon name="document-text-outline" class="inline-block align-text-bottom"></ion-icon>
-                    ${escapeHTML(item.meetingTitle || '未知會議')}
-                </p>` : '';
-            
-            // 刪除按鈕 (僅在 enableDelete 為 true 時顯示)
-            const deleteButtonHtml = enableDelete ? `
-                <button class="delete-action-item-btn p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ion-icon name="trash-outline" class="text-base"></ion-icon>
-                </button>
-                ` : '';
-
-            li.innerHTML = `
-                <div class="action-item-display">
-                    ${meetingTitleHtml}
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-medium text-slate-800 break-words">${escapeHTML(item.item)}</p>
-                            <span class="responsible-badge">
-                                <ion-icon name="person-outline" class="text-sm"></ion-icon>
-                                <span>${escapeHTML(item.responsible || '未指定')}</span>
-                            </span>
-                        </div>
-                        <div class="flex-shrink-0 flex items-center gap-2">
-                            <button class="edit-action-item-btn p-1 text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ion-icon name="pencil-outline" class="text-base"></ion-icon>
-                            </button>
-                            ${deleteButtonHtml}
-                            <select class="status-select rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm ${colorClasses} transition-colors duration-150">
-                                <option value="todo" ${status === 'todo' ? 'selected' : ''}>待辦</option>
-                                <option value="inprogress" ${status === 'inprogress' ? 'selected' : ''}>進行中</option>
-                                <option value="done" ${status === 'done' ? 'selected' : ''}>已完成</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="action-item-edit" style="display: none;">
-                    <div class="space-y-2">
-                        <div>
-                            <label class="text-xs font-medium text-slate-600">任務描述</label>
-                            <textarea class="w-full p-2 border border-slate-300 rounded-md text-sm action-item-edit-text">${escapeHTML(item.item)}</textarea>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-slate-600">負責人</label>
-                            <input type="text" class="w-full p-2 border border-slate-300 rounded-md text-sm action-item-edit-responsible" value="${escapeHTML(item.responsible || '')}">
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mt-2 justify-end">
-                        <button class="cancel-action-item-btn bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs py-1 px-2 rounded">取消</button>
-                        <button class="save-action-item-btn bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">儲存</button>
-                    </div>
-                </div>
-
-                <div class="action-item-progress-area">
-                    ${progressHtml}
-                    ${addProgressHtml}
-                </div>
-            `;
-            return li;
-        }
-
-        // --- 共用的待辦事項事件綁定 ---
-        function attachActionItemListeners(containerElement) {
-            
-            const getItemId = (e) => e.currentTarget.closest('li[data-item-id]').dataset.itemId;
-
-            // 狀態變更
-            containerElement.querySelectorAll('.status-select').forEach(select => {
-                select.addEventListener('change', (e) => {
-                    const newStatus = e.target.value;
-                    const itemId = getItemId(e);
-                    e.target.classList.remove('bg-gray-200', 'text-gray-800', 'bg-yellow-200', 'text-yellow-800', 'bg-green-200', 'text-green-800', 'bg-gray-100', 'text-slate-800');
-                    const newClasses = getStatusColorClasses(newStatus).split(' ');
-                    e.target.classList.add(...newClasses);
-                    updateActionItemStatus(itemId, newStatus);
-                });
+                        `;
+                        repliesContainer.appendChild(replyItem);
+                    });
+                }
+                const addReplyBtnWrapper = document.createElement('div');
+                addReplyBtnWrapper.className = 'mt-2';
+                addReplyBtnWrapper.innerHTML = `<button type="button" data-topic-id="${topic.id}" class="add-reply-btn text-sm text-blue-600 font-medium hover:text-blue-800 p-1 rounded-lg hover:bg-blue-100">+ 新增回應</button>`;
+                repliesContainer.appendChild(addReplyBtnWrapper);
+                topicWrapper.appendChild(repliesContainer); 
+                listEl.appendChild(topicWrapper); 
             });
-
-            // 新增進度
-            containerElement.querySelectorAll('.add-progress-btn').forEach(btn => {
-                const inputEl = document.getElementById(btn.dataset.inputId);
-                
-                const addHandler = (e) => {
-                    const itemId = getItemId(e);
-                    if (inputEl) {
-                        const updateText = inputEl.value;
-                        if (updateText.trim()) {
-                            addProgressUpdate(itemId, updateText);
-                            inputEl.value = '';
-                        }
+        }
+        function renderActions() {
+            const listEl = document.querySelector('#tab-actions #actions-list');
+            if (!listEl) return; 
+            listEl.innerHTML = '';
+            if (actions.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-500 text-center">目前沒有待辦事項。</p>';
+                return;
+            }
+            const todayString = new Date().toISOString().split('T')[0];
+            const actionsByOwner = actions.reduce((acc, action) => {
+                const owner = action.owner.trim() || '未指派';
+                if (!acc[owner]) acc[owner] = [];
+                acc[owner].push(action);
+                return acc;
+            }, {});
+            const sortedOwners = Object.keys(actionsByOwner).sort();
+            sortedOwners.forEach(owner => {
+                const groupContainer = document.createElement('div');
+                const colorClass = getPersonColorClass(owner); 
+                groupContainer.className = `rounded-lg border ${colorClass} border-l-4 bg-white mb-4 shadow-sm`;
+                const header = document.createElement('div');
+                header.className = 'p-3 border-b border-slate-200 bg-slate-50 rounded-t-lg';
+                header.innerHTML = `<h3 class="font-bold text-lg text-slate-800">${owner}</h3>`;
+                groupContainer.appendChild(header);
+                const tasksList = document.createElement('div');
+                tasksList.className = 'p-3 space-y-3'; 
+                groupContainer.appendChild(tasksList);
+                const tasks = actionsByOwner[owner];
+                const statusOrder = { 'pending': 1, 'in_progress': 2, 'done': 3 };
+                tasks.sort((a, b) => {
+                    const statusA = statusOrder[a.status] || 4;
+                    const statusB = statusOrder[b.status] || 4;
+                    if (statusA !== statusB) return statusA - statusB;
+                    const dueA = a.due || '9999-12-31';
+                    const dueB = b.due || '9999-12-31';
+                    return new Date(dueA) - new Date(dueB);
+                });
+                tasks.forEach(action => {
+                    const item = document.createElement('div');
+                    const isDone = action.status === 'done';
+                    const latestUpdate = (action.progressUpdates && action.progressUpdates.length > 0) 
+                        ? action.progressUpdates[action.progressUpdates.length - 1] 
+                        : null; 
+                    let statusLabel = '';
+                    switch (action.status) {
+                        case 'pending': statusLabel = '<span class="text-xs font-medium bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">待處理</span>'; break;
+                        case 'in_progress': statusLabel = '<span class="text-xs font-medium bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full">進行中</span>'; break;
+                        case 'done': statusLabel = '<span class="text-xs font-medium bg-green-200 text-green-800 px-2 py-0.5 rounded-full">已完成</span>'; break;
+                    }
+                    let overdueLabel = '';
+                    if (action.due && todayString > action.due && action.status !== 'done') {
+                        overdueLabel = ' <span class="font-bold text-red-600">(已逾期)</span>';
+                    }
+                    item.className = `bg-white p-3 rounded-lg border border-slate-200 shadow-sm ${isDone ? 'opacity-60' : ''}`;
+                    // *** 修改：從 action.id 改為 action.docId ***
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex-grow">
+                                <div class="flex items-center gap-2 mb-2">
+                                    ${statusLabel}
+                                    <span class="font-medium ${isDone ? 'text-slate-600 line-through' : 'text-slate-900'}">${action.title}</span>
+                                </div>
+                                <span class="text-sm text-slate-600 block ml-1">
+                                    ${action.due ? `截止日期：${action.due}` : ''}${overdueLabel}
+                                </span>
+                                ${action.notes ? `<p class="text-sm text-slate-600 mt-2 ml-1" style="white-space: pre-wrap;">${action.notes}</p>` : ''}
+                                ${latestUpdate ? `
+                                <div class="mt-2 ml-1">
+                                    <span class="text-sm font-medium text-slate-700">最新進度 (${latestUpdate.date}):</span>
+                                    <span class="block font-semibold text-blue-700 mt-1">${latestUpdate.update}</span>
+                                </div>` : ''}
+                            </div>
+                            <div class="flex-shrink-0 flex items-center space-x-1">
+                                <button type="button" data-id="${action.docId}" class="open-edit-modal-btn text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="編輯/更新">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                </button>
+                                <button type="button" data-id="${action.docId}" class="remove-action-btn text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="移除">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6zm2 2a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1zm4 0a1 1 0 011 1v6a1 1 0 11-2 0V9a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
+                        </div>`;
+                    tasksList.appendChild(item);
+                });
+                listEl.appendChild(groupContainer);
+            });
+        }
+        function renderPastMeetingsList() {
+            pastMeetingsList.innerHTML = '';
+            if (meetings.length === 0) {
+                pastMeetingsList.innerHTML = '<p class="text-slate-500">沒有儲存的會議...</p>';
+                return;
+            }
+            meetings.forEach(meeting => {
+                const item = document.createElement('div');
+                item.className = 'w-full text-left p-3 rounded-lg hover:bg-blue-100 data-item'; 
+                item.dataset.id = meeting.docId; // *** 修改：使用 docId ***
+                item.innerHTML = `
+                    <div class="view-past-meeting-content cursor-pointer flex-grow pr-4" style="min-width: 0;"> 
+                        <span class="block font-semibold text-blue-800 truncate-title" title="${meeting.title}">${meeting.title}</span>
+                        <span class="block text-sm text-slate-600 pointer-events-none">${meeting.date}</span>
+                    </div>
+                    <div class="flex-shrink-0 mt-3 space-x-2">
+                        <button type="button" data-id="${meeting.docId}" class="edit-past-meeting-btn bg-blue-600 text-white py-1 px-3 rounded-lg text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            載入編輯
+                        </button>
+                        <button type="button" data-id="${meeting.docId}" class="delete-past-meeting-btn bg-red-600 text-white py-1 px-3 rounded-lg text-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            刪除
+                        </button>
+                    </div>
+                `;
+                pastMeetingsList.appendChild(item);
+            });
+        }
+        
+        // --- HTML 產生器 (與 localStorage 版相同) ---
+        function generateMeetingHtml(data) {
+            let htmlOutput = `<h1 class="text-2xl font-bold text-center mb-6">${data.title}</h1>`;
+            htmlOutput += `<div class="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm"><p><strong>會議日期：</strong> ${data.date}</p><p><strong>會議地點：</strong> ${data.location}</p><p><strong>記錄人：</strong> ${data.recorder}</p></div>`;
+            htmlOutput += `<h2>出席人員</h2><p>${(data.attendees || '未填寫').replace(/\n/g, '<br>')}</p>`;
+            htmlOutput += `<h2>會議目的 / 議程</h2><p>${(data.agenda || '未填寫').replace(/\n/g, '<br>')}</p>`;
+            htmlOutput += '<h2>重要決議</h2>';
+            if (data.decisions && data.decisions.length > 0) {
+                htmlOutput += '<ul>';
+                data.decisions.forEach(text => { htmlOutput += `<li>${text}</li>`; });
+                htmlOutput += '</ul>';
+            } else { htmlOutput += '<p>無</p>'; }
+            const actionItems = data.actions || [];
+            if (actionItems.length > 0) {
+                htmlOutput += '<h2>待辦事項</h2>';
+                const getStatusLabel = (status) => {
+                    switch (status) {
+                        case 'pending': return ' [待處理]';
+                        case 'in_progress': return ' [進行中]';
+                        case 'done': return ' [已完成]';
+                        default: return '';
                     }
                 };
-                
-                btn.addEventListener('click', addHandler);
-
-                if (inputEl) {
-                    inputEl.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault(); 
-                            addHandler(e); // 傳遞事件物件
+                const pendingActions = actionItems.filter(a => a.status !== 'done');
+                const doneActions = actionItems.filter(a => a.status === 'done');
+                if (pendingActions.length > 0) {
+                    htmlOutput += '<h3>待追蹤事項</h3><ul>';
+                    pendingActions.forEach(action => {
+                        htmlOutput += `<li><strong>${getStatusLabel(action.status)} [${action.owner}]</strong> ${action.title} ${action.due ? `(截止日期: ${action.due})` : ''}`;
+                        if (action.notes) htmlOutput += `<p style="margin-top: 4px; margin-left: 20px; font-style: italic; color: #555;">${action.notes.replace(/\n/g, '<br>')}</p>`;
+                        if (action.progressUpdates) { 
+                            htmlOutput += '<ul class="action-item-history">'; 
+                            action.progressUpdates.forEach(up => { htmlOutput += `<li><strong>${up.date}:</strong> ${up.update}</li>`; });
+                            htmlOutput += '</ul>';
                         }
+                        htmlOutput += '</li>';
                     });
+                    htmlOutput += '</ul>';
                 }
-            });
-
-            // 編輯進度留言 (鉛筆)
-            containerElement.querySelectorAll('.edit-progress-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const li = e.currentTarget.closest('li[data-timestamp]');
-                    li.querySelector('.progress-display').style.display = 'none';
-                    li.querySelector('.progress-edit').style.display = 'block';
-                });
-            });
-
-            // 取消編輯 (進度留言)
-            containerElement.querySelectorAll('.cancel-edit-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const li = e.currentTarget.closest('li[data-timestamp]');
-                    const textarea = li.querySelector('.progress-edit textarea');
-                    const originalText = li.querySelector('.progress-text').textContent.split(':').slice(1).join(':').trim();
-                    textarea.value = originalText; 
-                    li.querySelector('.progress-display').style.display = 'flex';
-                    li.querySelector('.progress-edit').style.display = 'none';
-                });
-            });
-
-            // 儲存進度留言
-            containerElement.querySelectorAll('.save-progress-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = getItemId(e);
-                    const progressTimestamp = parseInt(e.currentTarget.dataset.progressTimestamp);
-                    const li = e.currentTarget.closest('li[data-timestamp]');
-                    const newText = li.querySelector('.progress-edit textarea').value;
-                    if (newText.trim()) {
-                        updateProgressUpdateText(itemId, progressTimestamp, newText.trim());
-                    }
-                });
-            });
-
-            // 編輯待辦事項 (鉛筆)
-            containerElement.querySelectorAll('.edit-action-item-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const li = e.currentTarget.closest('li[data-item-id]');
-                    li.querySelector('.action-item-display').style.display = 'none';
-                    li.querySelector('.action-item-edit').style.display = 'block';
-                    li.querySelector('.action-item-progress-area').style.display = 'none';
-                });
-            });
-
-            // 取消編輯 (待辦事項)
-            containerElement.querySelectorAll('.cancel-action-item-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const li = e.currentTarget.closest('li[data-item-id]');
-                    const itemId = getItemId(e);
-                    const originalItem = globalActionItems.find(item => item.id === itemId);
-                    
-                    li.querySelector('.action-item-edit-text').value = originalItem.item;
-                    li.querySelector('.action-item-edit-responsible').value = originalItem.responsible || '';
-
-                    li.querySelector('.action-item-display').style.display = 'block';
-                    li.querySelector('.action-item-edit').style.display = 'none';
-                    li.querySelector('.action-item-progress-area').style.display = 'block';
-                });
-            });
-
-            // 儲存待辦事項
-            containerElement.querySelectorAll('.save-action-item-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = getItemId(e);
-                    const li = e.currentTarget.closest('li[data-item-id]');
-                    const newText = li.querySelector('.action-item-edit-text').value;
-                    const newResponsible = li.querySelector('.action-item-edit-responsible').value;
-                    
-                    if (newText.trim()) {
-                        updateActionItemDetails(itemId, newText.trim(), newResponsible.trim());
-                    } else {
-                        showErrorModal("任務描述不可為空。");
-                        li.querySelector('.action-item-edit-text').focus();
-                    }
-                });
-            });
-
-            // 刪除待辦事項 (垃圾桶)
-            containerElement.querySelectorAll('.delete-action-item-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = getItemId(e);
-                    showConfirmModal(
-                        '您確定要刪除這個待辦事項嗎？',
-                        '此操作無法復原。',
-                        () => deleteActionItem(itemId)
-                    );
-                });
-            });
-        }
-        
-        // --- 輔助函式 ---
-
-        function formatDate(timestamp) {
-            if (!timestamp) return '未知日期';
-            const date = timestamp.toDate();
-            return date.toLocaleString('zh-TW', { 
-                year: 'numeric', month: 'numeric', day: 'numeric', 
-                hour: '2-digit', minute: '2-digit'
-            });
-        }
-        
-        function getStatusColorClasses(status) {
-            switch(status) {
-                case 'todo': return 'bg-gray-200 text-gray-800';
-                case 'inprogress': return 'bg-yellow-200 text-yellow-800';
-                case 'done': return 'bg-green-200 text-green-800';
-                default: return 'bg-gray-100 text-slate-800';
-            }
-        }
-
-        function escapeHTML(str) {
-            if (typeof str !== 'string') return str;
-            return str.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;', '<': '&lt;', '>': '&gt;',
-                    '"': '&quot;', "'": '&#039;'
-                }[m];
-            });
-        }
-        
-        function showLoading(message) {
-            loadingOverlay.querySelector('p').textContent = message || '處理中...';
-            loadingOverlay.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
-
-        function showErrorModal(message) {
-            errorMessageText.textContent = message;
-            errorOverlay.style.display = 'flex';
-        }
-
-        function hideErrorModal() {
-            errorOverlay.style.display = 'none';
-        }
-
-        function showConfirmModal(title, message, onConfirm) {
-            document.getElementById('confirm-title').textContent = title;
-            confirmMessageText.textContent = message;
-            confirmOverlay.style.display = 'flex';
-            
-            // 移除舊監聽器，綁定新監聽器
-            const newConfirmBtn = confirmBtn.cloneNode(true);
-            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-            confirmBtn = newConfirmBtn;
-            confirmBtn.textContent = "確定";
-            confirmBtn.addEventListener('click', () => {
-                onConfirm();
-                hideConfirmModal();
-            }, { once: true }); // 確保只觸發一次
-        }
-
-        function hideConfirmModal() {
-            confirmOverlay.style.display = 'none';
-        }
-
-        // --- 表單按鈕狀態管理 ---
-        function updateFormButtons(isSaved, hasAnalyzed) {
-            if (isSaved) {
-                // 已儲存 (編輯模式)
-                formSaveBtn.textContent = '儲存會議與 AI 結果';
-                formSaveBtn.className = "w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2";
-                
-                formAiBtn.disabled = false;
-                formAiBtn.textContent = hasAnalyzed ? '重新由 AI 分析' : 'AI 分析 (需先儲存)';
-                formAiBtn.className = hasAnalyzed ? 
-                    "w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2" :
-                    "w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2";
-            } else {
-                // 未儲存 (新增模式)
-                formSaveBtn.textContent = '儲存並由 AI 分析';
-                formSaveBtn.className = "w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2";
-                
-                formAiBtn.disabled = true;
-                formAiBtn.textContent = 'AI 分析 (需先儲存)';
-                formAiBtn.className = "w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2 cursor-not-allowed";
-            }
-        }
-
-
-        // --- Gemini API 呼叫 ---
-        async function getAiSummary(notes) {
-            const systemPrompt = `
-                你是一個專業的會議助理。請根據以下中文會議記錄，完成兩項任務：
-                1.  **產生摘要 (summary):** 產生一段精簡的會議摘要，總結會議的關鍵討論點和結論。請使用繁體中文。
-                2.  **提取待辦事項 (actionItems):** 提取所有明確的待辦事項。
-                    - 每一項待辦事項 (action item) 必須包含 'item' (任務描述) 和 'responsible' (負責人)。
-                    - 如果找不到明確的負責人，請將 'responsible' 設為 '未指定'。
-
-                請嚴格依照以下的 JSON 格式回傳，不要有任何多餘的文字或 markdown 標記：
-            `;
-            const schema = {
-                type: "OBJECT",
-                properties: {
-                    summary: { type: "STRING" },
-                    actionItems: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                item: { type: "STRING" },
-                                responsible: { type: "STRING" }
-                            },
-                            required: ["item", "responsible"]
+                if (doneActions.length > 0) {
+                    htmlOutput += '<h3>已完成事項</h3><ul>';
+                    doneActions.forEach(action => {
+                        htmlOutput += `<li><strong>${getStatusLabel(action.status)} [${action.owner}]</strong> ${action.title} ${action.due ? `(截止日期: ${action.due})` : ''}`;
+                        if (action.notes) htmlOutput += `<p style="margin-top: 4px; margin-left: 20px; font-style: italic; color: #555;">${action.notes.replace(/\n/g, '<br>')}</p>`;
+                        if (action.progressUpdates) { 
+                            htmlOutput += '<ul class="action-item-history">'; 
+                            action.progressUpdates.forEach(up => { htmlOutput += `<li><strong>${up.date}:</strong> ${up.update}</li>`; });
+                            htmlOutput += '</ul>';
                         }
-                    }
-                },
-                required: ["summary", "actionItems"]
-            };
-            const payload = {
-                contents: [{ parts: [{ text: notes }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema
-                }
-            };
-            
-            try {
-                let response;
-                let delay = 1000;
-                for (let i = 0; i < 3; i++) {
-                    response = await fetch(geminiApiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        htmlOutput += '</ul></li>';
                     });
-                    if (response.ok) break;
-                    if (response.status === 429 || response.status >= 500) {
-                        console.warn(`Gemini API request failed with status ${response.status}. Retrying in ${delay}ms...`);
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                    } else {
-                        throw new Error(`Gemini API 請求失敗，狀態碼: ${response.status}`);
+                    htmlOutput += '</ul>';
+                }
+            } else if (data.actions) { htmlOutput += '<h2>待辦事項</h2><p>無</p>'; }
+            htmlOutput += '<h2>發言記錄 (討論串)</h2>';
+            if (data.discussionLog && data.discussionLog.length > 0) {
+                htmlOutput += '<ul>';
+                data.discussionLog.forEach(topic => {
+                    const motionTag = topic.isMotion ? ' <strong>(臨時動議)</strong>' : '';
+                    htmlOutput += `<li><strong>${topic.speaker}${motionTag}:</strong> <p style="margin: 0; display: inline;">${topic.statement.replace(/\n/g, '<br>')}</p>`; 
+                    if (topic.replies && topic.replies.length > 0) {
+                        htmlOutput += '<ul style="list-style-type: circle; margin-left: 20px; margin-top: 5px;">';
+                        topic.replies.forEach(reply => {
+                            htmlOutput += `<li><strong>${reply.speaker}:</strong> <p style="margin: 0; display: inline;">${reply.statement.replace(/\n/g, '<br>')}</p></li>`;
+                        });
+                        htmlOutput += '</ul>';
                     }
-                }
-                if (!response.ok) {
-                    throw new Error(`Gemini API 請求失敗，狀態碼: ${response.status} (可能是額度已用完)`);
-                }
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const jsonString = candidate.content.parts[0].text;
-                    return JSON.parse(jsonString);
-                } else {
-                    const blockReason = candidate?.finishReason;
-                    if (blockReason) {
-                        throw new Error(`AI 因 ${blockReason} 理由拒絕回應。`);
-                    }
-                    throw new Error("AI 無法處理您的請求，回傳的資料格式不符。");
-                }
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                throw new Error(`AI 分析失敗: ${error.message}`); 
-            }
+                    htmlOutput += '</li>';
+                });
+                htmlOutput += '</ul>';
+            } else { htmlOutput += '<p>無</p>'; }
+            htmlOutput += '<h2>臨時動議</h2>';
+            const motions = data.discussionLog ? data.discussionLog.filter(log => log.isMotion) : [];
+            if (motions.length > 0) {
+                htmlOutput += '<ul>';
+                motions.forEach(text => { htmlOutput += `<li><strong>[${text.speaker}]</strong> ${text.statement}</li>`; }); 
+                htmlOutput += '</ul>';
+            } else { htmlOutput += '<p>無</p>'; }
+            return htmlOutput;
         }
-
-
-        // --- Firestore 資料操作 ---
-
-        // 處理表單提交 (儲存會議 / 新增會議)
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            if (!userId) return showErrorModal("錯誤：使用者未登入。");
-
-            const title = document.getElementById('meeting-title').value || '未命名會議';
-            const attendees = document.getElementById('meeting-attendees').value.split(',').map(s => s.trim()).filter(Boolean);
-            const notes = document.getElementById('meeting-notes').value;
+        function generatePlainTextOutput() {
+            const title = document.getElementById('meeting-title').value;
+            const date = document.getElementById('meeting-date').value;
+            const location = document.getElementById('meeting-location').value;
             const recorder = document.getElementById('meeting-recorder').value;
-            const summary = currentMeetingDataForForm?.summary || ''; // 讀取現有摘要
+            const attendees = document.getElementById('meeting-attendees').value;
+            const agenda = document.getElementById('meeting-agenda').value;
+            let textOutput = `【${title}】\n\n`;
+            textOutput += `會議日期：${date}\n會議地點：${location}\n記錄人：${recorder}\n\n`;
+            textOutput += `--- 出席人員 ---\n${attendees || '未填寫'}\n\n`;
+            textOutput += `--- 會議目的 / 議程 ---\n${agenda || '未填寫'}\n\n`;
+            textOutput += '--- 重要決議 ---\n';
+            if (decisions.length > 0) {
+                decisions.forEach((text, i) => { textOutput += `${i + 1}. ${text}\n`; });
+            } else { textOutput += '無\n'; }
+            textOutput += '\n--- 發言記錄 (討論串) ---\n';
+            if (discussionLog.length > 0) {
+                discussionLog.forEach((topic) => { 
+                    const motionTag = topic.isMotion ? '(臨時動議) ' : '';
+                    textOutput += `[${topic.speaker}]: ${motionTag}${topic.statement}\n`; 
+                    if (topic.replies && topic.replies.length > 0) {
+                        topic.replies.forEach(reply => {
+                            textOutput += `  - [${reply.speaker}]: ${reply.statement}\n`; 
+                        });
+                    }
+                });
+            } else { textOutput += '無\n'; }
+            textOutput += '\n'; 
+            textOutput += '--- 臨時動議 ---\n';
+            const motions = discussionLog ? discussionLog.filter(log => log.isMotion) : [];
+            if (motions.length > 0) {
+                motions.forEach((text, i) => { textOutput += `${i + 1}. [${text.speaker}]: ${text.statement}\n`; });
+            } else { textOutput += '無\n'; }
+            textOutput += '\n';
+            return textOutput;
+        }
+        function resetLogForm() {
+            editingTopicId = null;
+            addLogBtn.textContent = '新增話題';
+            addLogBtn.classList.replace('bg-green-600', 'bg-blue-600');
+            addLogBtn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+            logSpeaker.value = '';
+            logStatement.value = '';
+            logIsMotion.checked = false;
+        }
 
-            if (!notes.trim()) {
-                showErrorModal("會議筆記不能為空。");
-                return;
-            }
 
-            const meetingData = {
-                title,
-                attendees,
-                notes,
-                recorder,
-                summary, // 包含已有的摘要
-                updatedAt: Timestamp.now(), // 使用 updatedAt
-                userId: userId
-            };
+        // --- *** Firebase 資料監聽 *** ---
 
-            showLoading('儲存會議中...');
+        // 監聽「待辦事項」集合
+        function setupActionListeners() {
+            if (actionsUnsubscribe) actionsUnsubscribe(); // 取消舊的監聽
+            const actionsQuery = query(collection(db, 'actions'));
+            actionsUnsubscribe = onSnapshot(actionsQuery, (snapshot) => {
+                actions = [];
+                snapshot.forEach((doc) => {
+                    actions.push({ ...doc.data(), docId: doc.id }); // *** 儲存 docId ***
+                });
+                renderActions();
+            }, (error) => console.error("監聽待辦事項失敗:", error));
+        }
 
-            try {
-                if (currentMeetingId) {
-                    // 更新現有會議
-                    const meetingDocRef = doc(db, `artifacts/${appId}/users/${userId}/meetings`, currentMeetingId);
-                    await updateDoc(meetingDocRef, meetingData);
-                    
-                    // 更新 currentMeetingDataForForm
-                    currentMeetingDataForForm = { ...currentMeetingDataForForm, ...meetingData };
-                    updateFormButtons(true, !!currentMeetingDataForForm.summary); // 更新按鈕狀態
-                } else {
-                    // 新增會議
-                    meetingData.createdAt = Timestamp.now(); // 新增時才加 createdAt
-                    const meetingsColPath = `artifacts/${appId}/users/${userId}/meetings`;
-                    const meetingDocRef = await addDoc(collection(db, meetingsColPath), meetingData);
-                    
-                    currentMeetingId = meetingDocRef.id;
-                    currentMeetingDataForForm = { id: currentMeetingId, ...meetingData };
-                    
-                    // 更新左側列表高亮
-                    renderMeetingsList(); 
-                    updateFormButtons(true, false); // 更新按鈕狀態 (已儲存，未分析)
+        // 監聽「會議」集合
+        function setupMeetingListeners() {
+            if (meetingsUnsubscribe) meetingsUnsubscribe();
+            const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
+            meetingsUnsubscribe = onSnapshot(meetingsQuery, (snapshot) => {
+                meetings = [];
+                snapshot.forEach((doc) => {
+                    meetings.push({ ...doc.data(), docId: doc.id }); // *** 儲存 docId ***
+                });
+                // 注意：這裡不需要 render，只有在打開 Modal 時才 render
+                // 如果 Modal 是打開的，則重新渲染
+                if (!pastMeetingsModal.classList.contains('hidden')) {
+                    renderPastMeetingsList();
                 }
-
-            } catch (error) {
-                console.error("Error saving meeting:", error);
-                showErrorModal(`儲存失敗：${error.message}`);
-            } finally {
-                hideLoading();
-            }
+            }, (error) => console.error("監聽會議失敗:", error));
         }
 
-        // 觸發 AI 分析 (僅限已儲存的會議)
-        async function handleAiAnalysis() {
-            if (!currentMeetingId || !currentMeetingDataForForm) {
-                showErrorModal("請先儲存會議，才能進行 AI 分析。");
-                return;
-            }
-
-            const notes = document.getElementById('meeting-notes').value;
-            if (!notes.trim()) {
-                showErrorModal("會議筆記不能為空，無法進行分析。");
-                return;
-            }
-
-            showLoading('AI 分析中，請稍候...');
-
-            try {
-                // 1. 呼叫 AI
-                const aiResult = await getAiSummary(notes);
-                const { summary, actionItems } = aiResult;
-
-                // 2. 更新會議文件 (僅更新摘要)
-                const meetingDocRef = doc(db, `artifacts/${appId}/users/${userId}/meetings`, currentMeetingId);
-                await updateDoc(meetingDocRef, {
-                    summary: summary,
-                    updatedAt: Timestamp.now()
-                });
-                
-                // 更新 UI 上的摘要
-                formAiSummaryEl.innerHTML = `<div class="prose prose-slate max-w-none">${summary}</div>`;
-                currentMeetingDataForForm.summary = summary; // 更新本地快取
-
-                // 3. 處理待辦事項
-                // 為了避免重複，我們先刪除此會議舊的待辦事項
-                showLoading('更新待辦事項中...');
-                await deleteActionItemsByMeetingId(currentMeetingId);
-
-                // 4. 批次新增 AI 提取的新待辦事項
-                const actionItemsColPath = `artifacts/${appId}/users/${userId}/actionItems`;
-                const batch = writeBatch(db);
-                actionItems.forEach(item => {
-                    const newItemRef = doc(collection(db, actionItemsColPath)); // 產生新 ID
-                    const itemData = {
-                        ...item,
-                        status: 'todo',
-                        progress: [],
-                        createdAt: Timestamp.now(),
-                        meetingId: currentMeetingId,
-                        meetingTitle: currentMeetingDataForForm.title || '未命名會議'
-                    };
-                    batch.set(newItemRef, itemData);
-                });
-                await batch.commit();
-
-                // 5. 更新按鈕狀態
-                updateFormButtons(true, true);
-                // onSnapshot 會自動更新表單中的待辦事項列表
-
-            } catch (error) {
-                console.error("Error during AI analysis:", error);
-                showErrorModal(`AI 分析失敗：${error.message}`);
-            } finally {
-                hideLoading();
-            }
+        // 監聽「個人草稿」文件
+        function setupDraftListener(userId) {
+            if (draftUnsubscribe) draftUnsubscribe();
+            const draftRef = doc(db, 'drafts', userId);
+            draftUnsubscribe = onSnapshot(draftRef, (doc) => {
+                if (doc.exists()) {
+                    const draft = doc.data();
+                    // 只有在不是編輯會議的狀態下才載入草稿
+                    if (editingMeetingId === null) {
+                        document.getElementById('meeting-title').value = draft.title || '';
+                        document.getElementById('meeting-date').value = draft.date || new Date().toISOString().split('T')[0];
+                        document.getElementById('meeting-location').value = draft.location || '';
+                        document.getElementById('meeting-recorder').value = draft.recorder || '';
+                        document.getElementById('meeting-attendees').value = draft.attendees || '';
+                        document.getElementById('meeting-agenda').value = draft.agenda || '';
+                        decisions = draft.decisions || [];
+                        discussionLog = draft.discussionLog || [];
+                        renderDecisions();
+                        renderDiscussionLog();
+                    }
+                } else {
+                    // 文件不存在，清空本地陣列 (如果不是在編輯會議)
+                    if (editingMeetingId === null) {
+                        resetFormOnly();
+                    }
+                }
+            }, (error) => console.error("監聽草稿失敗:", error));
         }
 
-        // 更新待辦事項狀態
-        async function updateActionItemStatus(itemId, newStatus) {
-            if (!userId || !itemId) return;
-            try {
-                const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
-                await updateDoc(itemDocRef, { status: newStatus });
-            } catch (error) {
-                console.error("Error updating status:", error);
-            }
-        }
-
-        // 更新待辦事項內容
-        async function updateActionItemDetails(itemId, newItemText, newResponsibleText) {
-            if (!userId || !itemId || !newItemText) return;
-            showLoading('更新待辦事項中...');
-            try {
-                const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
-                await updateDoc(itemDocRef, {
-                    item: newItemText,
-                    responsible: newResponsibleText || '未指定'
-                });
-            } catch (error) {
-                console.error("Error updating action item details:", error);
-                showErrorModal("更新待辦事項失敗。");
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // 編輯進度留言
-        async function updateProgressUpdateText(itemId, progressTimestampMillis, newText) {
-            if (!userId || !itemId) return;
-            showLoading('更新留言中...');
-            const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
-            try {
-                const docSnap = await getDoc(itemDocRef);
-                if (!docSnap.exists()) throw new Error("找不到待辦事項");
-                
-                const itemData = docSnap.data();
-                const currentProgress = itemData.progress || [];
-                const progressIndex = currentProgress.findIndex(p => p.createdAt?.toMillis() === progressTimestampMillis);
-                
-                if (progressIndex === -1) throw new Error("找不到該留言");
-
-                const updatedProgress = [...currentProgress];
-                updatedProgress[progressIndex] = { ...updatedProgress[progressIndex], text: newText };
-                
-                await updateDoc(itemDocRef, { progress: updatedProgress });
-            } catch (error) {
-                console.error("Error updating progress text:", error);
-                showErrorModal("更新留言失敗。");
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // 新增進度更新
-        async function addProgressUpdate(itemId, updateText) {
-            if (!userId || !itemId || !updateText.trim()) return;
-
-            const newUpdate = {
-                text: updateText.trim(),
-                createdAt: Timestamp.now()
-            };
-
-            showLoading('新增進度中...');
-            const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
-            try {
-                const docSnap = await getDoc(itemDocRef);
-                if (!docSnap.exists()) throw new Error("找不到待辦事項");
-                const itemData = docSnap.data();
-                const currentProgress = itemData.progress || [];
-                const updatedProgress = [newUpdate, ...currentProgress];
-                await updateDoc(itemDocRef, { progress: updatedProgress });
-            } catch (error) {
-                console.error("Error adding progress update:", error);
-                showErrorModal("新增進度失敗。");
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // 刪除單個待辦事項
-        async function deleteActionItem(itemId) {
-            if (!userId || !itemId) return;
-            showLoading('刪除待辦事項中...');
-            try {
-                const itemDocRef = doc(db, `artifacts/${appId}/users/${userId}/actionItems`, itemId);
-                await deleteDoc(itemDocRef);
-            } catch (error) {
-                console.error("Error deleting action item:", error);
-                showErrorModal("刪除待辦事項失敗。");
-            } finally {
-                hideLoading();
-            }
-        }
+        // --- Firebase 事件處理 ---
         
-        // 根據 Meeting ID 刪除所有相關待辦事項
-        async function deleteActionItemsByMeetingId(meetingId) {
-            if (!userId || !meetingId) return;
-            
-            const actionItemsColPath = `artifacts/${appId}/users/${userId}/actionItems`;
-            const q = query(collection(db, actionItemsColPath), where("meetingId", "==", meetingId));
-            
-            try {
-                const querySnapshot = await getDocs(q);
-                const batch = writeBatch(db);
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-            } catch (error) {
-                console.error("Error deleting related action items:", error);
-                // 即使刪除失敗，也繼續刪除主會議
-                showErrorModal("刪除相關待辦事項時發生錯誤，但仍會嘗試刪除會議。");
-            }
-        }
-
-        // 刪除會議 (及相關待辦)
-        async function deleteMeeting(meetingId) {
-            if (!userId || !meetingId) return;
-            
-            showLoading('刪除相關待辦事項中...');
-            await deleteActionItemsByMeetingId(meetingId);
-
-            showLoading('刪除會議中...');
-            try {
-                const meetingDocRef = doc(db, `artifacts/${appId}/users/${userId}/meetings`, meetingId);
-                await deleteDoc(meetingDocRef);
-                
-                // 清理當前視圖
-                showNewMeetingForm();
-                
-            } catch (error) {
-                console.error("Error deleting meeting:", error);
-                showErrorModal("刪除會議失敗。");
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // 下載會議記錄
-        function downloadMeetingMinutes(meeting) {
-            const meetingActionItems = globalActionItems.filter(item => item.meetingId === meeting.id);
-            
-            let actionItemsHtml = '<h3>尚無待辦事項</h3>';
-            if (meetingActionItems.length > 0) {
-                actionItemsHtml = '<ul style="list-style-type: disc; margin-left: 20px;">';
-                meetingActionItems.forEach(item => {
-                    actionItemsHtml += `
-                        <li>
-                            <strong>${escapeHTML(item.item)}</strong> (負責人: ${escapeHTML(item.responsible || '未指定')}) - 狀態: ${escapeHTML(item.status)}
-                        </li>
-                    `;
-                });
-                actionItemsHtml += '</ul>';
-            }
-
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="zh-Hant">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>${escapeHTML(meeting.title)}</title>
-                    <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
-                        h1 { color: #333; }
-                        h2 { color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 30px; }
-                        p { color: #444; }
-                        ul { margin-bottom: 20px; }
-                        .summary { background: #f4f7f6; padding: 15px; border-left: 4px solid #4a90e2; }
-                        .notes { white-space: pre-wrap; background: #f9f9f9; padding: 10px; border: 1px solid #eee; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${escapeHTML(meeting.title)}</h1>
-                    <p><strong>會議日期:</strong> ${formatDate(meeting.createdAt)}</p>
-                    <p><strong>會議記錄:</strong> ${escapeHTML(meeting.recorder || '未記錄')}</p>
-                    <p><strong>出席人員:</strong> ${escapeHTML(meeting.attendees ? meeting.attendees.join(', ') : '未記錄')}</p>
-                    
-                    <h2>AI 摘要</h2>
-                    <div class="summary">
-                        ${meeting.summary || '無'}
-                    </div>
-                    
-                    <h2>待辦事項</h2>
-                    ${actionItemsHtml}
-                    
-                    <h2>原始筆記</h2>
-                    <div class="notes">${escapeHTML(meeting.notes)}</div>
-                    
-                </body>
-                </html>
-            `;
-            
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${meeting.title || '會議記錄'}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // --- 視圖切換 ---
-        function switchView(viewName) {
-            currentView = viewName;
-            
-            viewToggleBtns.forEach(btn => {
-                if (btn.dataset.view === viewName) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-
-            if (viewName === 'meetings') {
-                sidebarEl.style.display = 'flex';
-                if (currentMeetingId) {
-                    const meeting = meetings.find(m => m.id === currentMeetingId);
-                    if(meeting) renderMeetingDisplay(meeting);
-                    else showNewMeetingForm();
-                } else {
-                    showNewMeetingForm();
-                }
-                renderMeetingsList();
-            } else if (viewName === 'todos') {
-                sidebarEl.style.display = 'none';
-                meetingFormEl.style.display = 'none';
-                meetingDisplayEl.style.display = 'none';
-                todosViewEl.style.display = 'block';
-                renderGlobalTodosList();
-            }
-        }
-
-        // --- 啟動 ---
+        // 頁面載入完成時
         document.addEventListener('DOMContentLoaded', () => {
-            // 初始化 UI 元素
-            meetingsListEl = document.getElementById('meetings-list');
-            mainContentEl = document.getElementById('main-content');
-            meetingFormEl = document.getElementById('meeting-form');
-            meetingDisplayEl = document.getElementById('meeting-display');
-            todosViewEl = document.getElementById('todos-view');
-            globalTodosListEl = document.getElementById('global-todos-list');
-            loadingOverlay = document.getElementById('loading-overlay');
-            authStatusEl = document.getElementById('auth-status');
-            newMeetingBtn = document.getElementById('new-meeting-btn');
-            viewToggleContainer = document.getElementById('view-toggle-container');
-            viewToggleBtns = document.querySelectorAll('.tab-btn');
-            sidebarEl = document.getElementById('sidebar');
-            errorOverlay = document.getElementById('error-overlay');
-            errorMessageText = document.getElementById('error-message-text');
-            closeErrorBtn = document.getElementById('close-error-btn');
-            confirmOverlay = document.getElementById('confirm-overlay');
-            confirmMessageText = document.getElementById('confirm-message-text');
-            confirmBtn = document.getElementById('confirm-btn');
-            cancelConfirmBtn = document.getElementById('cancel-confirm-btn');
-            displayActionItemsListEl = document.getElementById('display-action-items-list');
-            formAiSummaryEl = document.getElementById('form-ai-summary');
-            formAiActionItemsEl = document.getElementById('form-ai-action-items');
-            formSaveBtn = document.getElementById('form-save-btn');
-            formAiBtn = document.getElementById('form-ai-btn');
+            // 獲取所有 DOM 元素 (因為 script type=module)
+            mainContentContainer = document.getElementById('minutes-form');
+            loginOverlay = document.getElementById('login-overlay');
+            appContainer = document.getElementById('app-container');
+            userStatus = document.getElementById('user-status');
+            logoutBtn = document.getElementById('logout-btn');
+            loginBtn = document.getElementById('login-btn');
+            tabButtons = document.querySelectorAll('.tab-btn');
+            tabContents = document.querySelectorAll('.tab-content');
+            outputContainer = document.getElementById('output-container');
+            formattedMinutes = document.getElementById('formatted-minutes');
+            copyBtn = document.getElementById('copy-btn');
+            resetBtn = document.getElementById('reset-btn');
+            copySuccess = document.getElementById('copy-success');
+            clipboardHelper = document.getElementById('clipboard-helper');
+            downloadBtn = document.getElementById('download-btn');
+            generateMinutesBtn = document.getElementById('generate-minutes-btn');
+            addDecisionBtn = document.getElementById('add-decision-btn');
+            decisionInput = document.getElementById('decision-input');
+            decisionsList = document.getElementById('decisions-list');
+            addActionBtn = document.getElementById('add-action-btn');
+            actionTitle = document.getElementById('action-title');
+            actionNotes = document.getElementById('action-notes');
+            actionOwner = document.getElementById('action-owner');
+            actionDue = document.getElementById('action-due');
+            actionsList = document.getElementById('actions-list');
+            actionError = document.getElementById('action-error');
+            editModal = document.getElementById('edit-modal');
+            cancelEditBtn = document.getElementById('cancel-edit-btn');
+            saveActionBtn = document.getElementById('save-action-btn');
+            modalActionId = document.getElementById('edit-action-id');
+            modalActionTitle = document.getElementById('modal-action-title');
+            modalActionNotes = document.getElementById('modal-action-notes');
+            modalActionOwner = document.getElementById('modal-action-owner');
+            modalActionDue = document.getElementById('modal-action-due');
+            modalActionStatus = document.getElementById('modal-action-status');
+            modalActionHistory = document.getElementById('modal-action-history');
+            modalActionUpdate = document.getElementById('modal-action-update');
+            addLogBtn = document.getElementById('add-log-btn');
+            logSpeaker = document.getElementById('log-speaker');
+            logStatement = document.getElementById('log-statement');
+            logList = document.getElementById('log-list');
+            logError = document.getElementById('log-error');
+            logIsMotion = document.getElementById('log-is-motion');
+            replyModal = document.getElementById('reply-modal');
+            replyModalTitle = document.getElementById('reply-modal-title');
+            replyToStatement = document.getElementById('reply-to-statement');
+            replyTopicId = document.getElementById('reply-topic-id');
+            replyId = document.getElementById('reply-id');
+            replySpeaker = document.getElementById('reply-speaker');
+            replyStatement = document.getElementById('reply-statement');
+            cancelReplyBtn = document.getElementById('cancel-reply-btn');
+            saveReplyBtn = document.getElementById('save-reply-btn');
+            viewPastMeetingsBtn = document.getElementById('view-past-meetings-btn');
+            pastMeetingsModal = document.getElementById('past-meetings-modal');
+            closePastModalBtn = document.getElementById('close-past-modal-btn');
+            pastMeetingsList = document.getElementById('past-meetings-list');
+            pastMeetingContent = document.getElementById('past-meeting-content');
+            confirmModal = document.getElementById('confirm-modal');
+            confirmTitle = document.getElementById('confirm-title');
+            confirmMessage = document.getElementById('confirm-message');
+            confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+            confirmOkBtn = document.getElementById('confirm-ok-btn');
 
-            // 綁定事件
-            initFirebase();
-            meetingFormEl.querySelector('form').addEventListener('submit', handleFormSubmit);
-            formAiBtn.addEventListener('click', handleAiAnalysis);
-            newMeetingBtn.addEventListener('click', showNewMeetingForm);
-            viewToggleBtns.forEach(btn => {
-                btn.addEventListener('click', () => switchView(btn.dataset.view));
+            // --- 綁定通用事件 ---
+            confirmOkBtn.addEventListener('click', () => {
+                if (typeof confirmCallback === 'function') confirmCallback(); 
+                hideConfirmModal();
             });
-            closeErrorBtn.addEventListener('click', hideErrorModal);
-            cancelConfirmBtn.addEventListener('click', hideConfirmModal);
+            confirmCancelBtn.addEventListener('click', hideConfirmModal);
 
-            // 初始顯示
-            switchView('meetings');
-            showNewMeetingForm();
-        });
+            // --- 綁定 Firebase 登入事件 ---
+            loginBtn.addEventListener('click', async () => {
+                try {
+                    await signInWithPopup(auth, provider);
+                    // 狀態變更將由 onAuthStateChanged 處理
+                } catch (error) {
+                    console.error("登入失敗:", error);
+                }
+            });
 
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    // 狀態變更將由 onAuthStateChanged 處理
+                } catch (error) {
+                    console.error("登出失敗:", error);
+                }
+            });
+
+            // --- 核心：監聽登入狀態 ---
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // --- 使用者已登入 ---
+                    currentUserId = user.uid;
+                    currentUserEmail = user.email;
+                    
+                    // 顯示應用程式，隱藏登入畫面
+                    appContainer.classList.remove('hidden');
+                    loginOverlay.classList.add('hidden');
+                    userStatus.textContent = `登入身分：${currentUserEmail}`;
+                    logoutBtn.classList.remove('hidden');
+
+                    // 啟動所有 Firebase 監聽器
+                    setupActionListeners();
+                    setupMeetingListeners();
+                    setupDraftListener(currentUserId);
+                    
+                } else {
+                    // --- 使用者已登出 ---
+                    currentUserId = null;
+                    currentUserEmail = null;
+
+                    // 顯示登入畫面，隱藏應用程式
+                    appContainer.classList.add('hidden');
+                    loginOverlay.classList.remove('hidden');
+                    userStatus.textContent = '';
+                    logoutBtn.classList.add('hidden');
+
+                    // 取消所有監聽
+                    if (actionsUnsubscribe) actionsUnsubscribe();
+                    if (meetingsUnsubscribe) meetingsUnsubscribe();
+                    if (draftUnsubscribe) draftUnsubscribe();
+
+                    // 清空本地資料
+                    actions = []; meetings = []; decisions = []; discussionLog = [];
+                    renderActions(); renderDecisions(); renderDiscussionLog();
+                    resetFormOnly();
+                }
+            });
+
+            // --- 綁定分頁事件 ---
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const targetTab = button.dataset.tab;
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+
+            // --- 綁定待辦事項 (Firebase 版) ---
+            document.querySelector('#tab-actions #add-action-btn').addEventListener('click', async () => {
+                const titleEl = document.querySelector('#tab-actions #action-title');
+                const notesEl = document.querySelector('#tab-actions #action-notes');
+                const ownerEl = document.querySelector('#tab-actions #action-owner');
+                const dueEl = document.querySelector('#tab-actions #action-due');
+                const errorEl = document.querySelector('#tab-actions #action-error');
+                const title = titleEl.value.trim();
+                const notes = notesEl.value.trim();
+                const owner = ownerEl.value.trim();
+                const due = dueEl.value.trim();
+                
+                if (title && owner) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const newAction = {
+                        title, notes, owner, due,
+                        status: 'pending', 
+                        progressUpdates: [{ date: today, update: "任務已建立" }],
+                        createdAt: serverTimestamp() // 用於排序
+                    };
+                    try {
+                        await addDoc(collection(db, 'actions'), newAction);
+                        // 清空欄位 (成功後)
+                        titleEl.value = ''; notesEl.value = ''; ownerEl.value = ''; dueEl.value = '';
+                        errorEl.classList.add('hidden'); 
+                        titleEl.focus(); 
+                    } catch (e) {
+                        console.error("新增待辦失敗:", e);
+                        errorEl.textContent = "新增失敗，請稍後再試。";
+                        errorEl.classList.remove('hidden');
+                    }
+                } else {
+                    errorEl.textContent = "請至少填寫「主標題」和「負責人」";
+                    errorEl.classList.remove('hidden'); 
+                }
+            });
+            saveActionBtn.addEventListener('click', async () => {
+                modalActionTitle.classList.remove('border-red-500');
+                modalActionOwner.classList.remove('border-red-500');
+                const id = modalActionId.value;
+                const newTitle = modalActionTitle.value.trim();
+                const newNotes = modalActionNotes.value.trim();
+                const newOwner = modalActionOwner.value.trim();
+                const newDue = modalActionDue.value;
+                const newStatus = modalActionStatus.value;
+                const newUpdateText = modalActionUpdate.value.trim(); 
+                if (!newTitle || !newOwner) {
+                    if (!newTitle) modalActionTitle.classList.add('border-red-500');
+                    if (!newOwner) modalActionOwner.classList.add('border-red-500');
+                    return; 
+                }
+                const actionRef = doc(db, 'actions', id);
+                const actionIndex = actions.findIndex(a => a.docId === id);
+                if (actionIndex === -1) return; // 找不到
+                
+                const action = actions[actionIndex];
+                const oldStatus = action.status; 
+                const today = new Date().toISOString().split('T')[0];
+                let newProgressUpdates = [...(action.progressUpdates || [])]; // 複製舊的
+
+                if (oldStatus !== newStatus) {
+                    let statusText = '';
+                    switch (newStatus) {
+                        case 'pending': statusText = '待處理'; break;
+                        case 'in_progress': statusText = '進行中'; break;
+                        case 'done': statusText = '已完成'; break;
+                    }
+                    newProgressUpdates.push({ date: today, update: `狀態更新為 ${statusText}` });
+                }
+                if (newUpdateText) {
+                    newProgressUpdates.push({ date: today, update: newUpdateText });
+                }
+                
+                try {
+                    await updateDoc(actionRef, {
+                        title: newTitle,
+                        notes: newNotes,
+                        owner: newOwner,
+                        due: newDue,
+                        status: newStatus,
+                        progressUpdates: newProgressUpdates
+                    });
+                    hideModal();
+                } catch (e) {
+                    console.error("更新待辦失敗:", e);
+                }
+            });
+            cancelEditBtn.addEventListener('click', hideModal);
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) hideModal();
+            });
+
+            // --- 綁定決議事件 (Firebase 版) ---
+            addDecisionBtn.addEventListener('click', () => {
+                const decisionText = decisionInput.value.trim();
+                if (!decisionText) return; 
+                if (editingDecisionIndex !== null) {
+                    decisions[editingDecisionIndex] = decisionText;
+                    editingDecisionIndex = null; 
+                    addDecisionBtn.textContent = '新增決議';
+                    addDecisionBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                    addDecisionBtn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                } else {
+                    decisions.push(decisionText);
+                }
+                renderDecisions();
+                saveDraft(); // *** 儲存草稿 ***
+                decisionInput.value = '';
+                decisionInput.focus();
+            });
+            
+            // --- 綁定發言記錄 (Firebase 版) ---
+            addLogBtn.addEventListener('click', () => {
+                const speaker = logSpeaker.value.trim();
+                const statement = logStatement.value.trim();
+                const isMotion = logIsMotion.checked; 
+                if (!speaker || !statement) {
+                    logError.classList.remove('hidden'); return;
+                }
+                logError.classList.add('hidden');
+                if (editingTopicId) {
+                    const topic = discussionLog.find(t => t.id === editingTopicId);
+                    if (topic) {
+                        topic.speaker = speaker;
+                        topic.statement = statement;
+                        topic.isMotion = isMotion; 
+                    }
+                    resetLogForm(); 
+                } else {
+                    discussionLog.push({ 
+                        id: crypto.randomUUID(),
+                        speaker, statement, isMotion, 
+                        replies: [] 
+                    });
+                }
+                renderDiscussionLog();
+                saveDraft(); // *** 儲存草稿 ***
+                logSpeaker.value = ''; 
+                logStatement.value = '';
+                logIsMotion.checked = false; 
+                logSpeaker.focus(); 
+            });
+            saveReplyBtn.addEventListener('click', () => {
+                const topicId = replyTopicId.value;
+                const idToSave = replyId.value; 
+                const speaker = replySpeaker.value.trim();
+                const statement = replyStatement.value.trim();
+                if (!speaker || !statement) return;
+                const topic = discussionLog.find(t => t.id === topicId);
+                if (!topic) return;
+                if (idToSave) {
+                    const reply = topic.replies.find(r => r.id === idToSave);
+                    if (reply) {
+                        reply.speaker = speaker;
+                        reply.statement = statement;
+                    }
+                } else {
+                    topic.replies.push({
+                        id: crypto.randomUUID(),
+                        speaker,
+                        statement
+                    });
+                }
+                renderDiscussionLog();
+                hideReplyModal();
+                saveDraft(); // *** 儲存草稿 ***
+            });
+            cancelReplyBtn.addEventListener('click', hideReplyModal);
+            replyModal.addEventListener('click', (e) => {
+                if(e.target === replyModal) hideReplyModal();
+            });
+
+            // --- 綁定主事件委派 (Firebase 版) ---
+            mainContentContainer.addEventListener('click', (e) => {
+                const removeDecisionBtn = e.target.closest('.remove-decision-btn');
+                const editDecisionBtn = e.target.closest('.edit-decision-btn');
+                const removeActionBtn = e.target.closest('.remove-action-btn');
+                const openEditModalBtn = e.target.closest('.open-edit-modal-btn');
+                const removeLogBtn = e.target.closest('.remove-log-btn');
+                const editLogBtn = e.target.closest('.edit-log-btn');
+                const addReplyBtn = e.target.closest('.add-reply-btn'); 
+                const editReplyBtn = e.target.closest('.edit-reply-btn'); 
+                const removeReplyBtn = e.target.closest('.remove-reply-btn'); 
+                const addDecisionReplyBtn = e.target.closest('.add-decision-reply-btn'); 
+
+                // 決議
+                if (removeDecisionBtn) {
+                    const index = parseInt(removeDecisionBtn.dataset.index, 10);
+                    showConfirmModal('刪除決議', `您確定要刪除第 ${index + 1} 項決議嗎？`, "確認刪除", () => {
+                        decisions.splice(index, 1);
+                        renderDecisions();
+                        if (editingDecisionIndex === index) {
+                            editingDecisionIndex = null;
+                            addDecisionBtn.textContent = '新增決議';
+                            addDecisionBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                            addDecisionBtn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                            decisionInput.value = '';
+                        }
+                        saveDraft(); // *** 儲存草稿 ***
+                    }); return;
+                }
+                if (editDecisionBtn) {
+                    const index = parseInt(editDecisionBtn.dataset.index, 10);
+                    decisionInput.value = decisions[index];
+                    addDecisionBtn.textContent = '更新決議'; 
+                    addDecisionBtn.classList.replace('bg-blue-600', 'bg-green-600'); 
+                    addDecisionBtn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+                    editingDecisionIndex = index; 
+                    decisionInput.focus(); return; 
+                }
+                // 待辦
+                if (removeActionBtn) {
+                    const id = removeActionBtn.dataset.id;
+                    const action = actions.find(a => a.docId === id);
+                    if (!action) return;
+                    showConfirmModal('刪除待辦事項', `您確定要刪除「${action.title}」這項待辦嗎？`, "確認刪除", async () => {
+                        try {
+                            await deleteDoc(doc(db, 'actions', id));
+                            // onSnapshot 會自動觸發 render
+                        } catch (e) {
+                            console.error("刪除待辦失敗:", e);
+                        }
+                    }); return;
+                }
+                if (openEditModalBtn) {
+                    const id = openEditModalBtn.dataset.id;
+                    const action = actions.find(a => a.docId === id);
+                    if (action) { 
+                        // *** 修正：傳入 action 而非 action.id ***
+                        populateEditModal(action); 
+                        showModal(); 
+                    }
+                    return; 
+                }
+                // 刪除「話題」
+                if (removeLogBtn) {
+                    const topicId = removeLogBtn.dataset.topicId;
+                    const topicIndex = discussionLog.findIndex(t => t.id === topicId);
+                    if (topicIndex === -1) return;
+                    const replyCount = discussionLog[topicIndex].replies.length;
+                    showConfirmModal('刪除話題', `您確定要刪除这个話題嗎？此話題下的 ${replyCount} 筆回應將一併被刪除。`, "確認刪除", () => {
+                        discussionLog.splice(topicIndex, 1);
+                        renderDiscussionLog();
+                        if (editingTopicId === topicId) resetLogForm();
+                        saveDraft(); // *** 儲存草稿 ***
+                    }); return; 
+                }
+                // 編輯「話題」
+                if (editLogBtn) {
+                    const topicId = editLogBtn.dataset.topicId;
+                    const topic = discussionLog.find(t => t.id === topicId);
+                    if (!topic) return;
+                    editingTopicId = topicId; 
+                    addLogBtn.textContent = '更新話題';
+                    addLogBtn.classList.replace('bg-blue-600', 'bg-green-600'); 
+                    addLogBtn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+                    logSpeaker.value = topic.speaker;
+                    logStatement.value = topic.statement;
+                    logIsMotion.checked = topic.isMotion;
+                    logSpeaker.focus(); return; 
+                }
+                // 開啟「新增回應」Modal
+                if (addReplyBtn) {
+                    const topicId = addReplyBtn.dataset.topicId;
+                    showReplyModal(topicId); return;
+                }
+                // 開啟「編輯回應」Modal
+                if (editReplyBtn) {
+                    const topicId = editReplyBtn.dataset.topicId;
+                    const replyId = editReplyBtn.dataset.replyId;
+                    const topic = discussionLog.find(t => t.id === topicId);
+                    if (topic) {
+                        const reply = topic.replies.find(r => r.id === replyId);
+                        if (reply) showReplyModal(topicId, reply);
+                    } return;
+                }
+                // 刪除「回應」
+                if (removeReplyBtn) {
+                    const topicId = removeReplyBtn.dataset.topicId;
+                    const replyId = removeReplyBtn.dataset.replyId;
+                    showConfirmModal('刪除回應', `您確定要刪除這筆回應嗎？`, "確認刪除", () => {
+                        const topic = discussionLog.find(t => t.id === topicId);
+                        if (topic) {
+                            topic.replies = topic.replies.filter(r => r.id !== replyId);
+                            renderDiscussionLog();
+                            saveDraft(); // *** 儲存草稿 ***
+                        }
+                    }); return;
+                }
+                // 將回應設為決議
+                if (addDecisionReplyBtn) {
+                    const topicId = addDecisionReplyBtn.dataset.topicId;
+                    const replyId = addDecisionReplyBtn.dataset.replyId;
+                    const topic = discussionLog.find(t => t.id === topicId);
+                    if (topic) {
+                        const reply = topic.replies.find(r => r.id === replyId);
+                        if (reply) {
+                            const decisionText = `[回應] ${reply.speaker}: ${reply.statement}`;
+                            if (!decisions.includes(decisionText)) {
+                                decisions.push(decisionText);
+                                renderDecisions();
+                                saveDraft(); // *** 儲存草稿 ***
+                                addDecisionReplyBtn.classList.remove('text-yellow-500');
+                                addDecisionReplyBtn.classList.add('text-green-500');
+                            }
+                        }
+                    }
+                    return;
+                }
+            });
+
+            // --- 綁定表單提交 (Firebase 版) ---
+            generateMinutesBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('meeting-title').value;
+                const date = document.getElementById('meeting-date').value;
+                const location = document.getElementById('meeting-location').value;
+                const recorder = document.getElementById('meeting-recorder').value;
+                const attendeesText = document.getElementById('meeting-attendees').value;
+                const agendaText = document.getElementById('meeting-agenda').value;
+                
+                // 抓取當前待辦事項的快照
+                const actionsSnapshot = [...actions.map(a => ({...a}))];
+                // 移除 docId，因為它只在本地有用
+                actionsSnapshot.forEach(a => delete a.docId);
+
+                const newMeeting = {
+                    title, date, location, recorder,
+                    attendees: attendeesText, 
+                    agenda: agendaText,     
+                    decisions: [...decisions], 
+                    discussionLog: [...discussionLog], 
+                    actions: actionsSnapshot, // 儲存待辦快照
+                    createdAt: serverTimestamp(),
+                    ownerId: currentUserId // 標記建立者
+                };
+                
+                try {
+                    if (editingMeetingId) {
+                        // 更新
+                        const meetingRef = doc(db, 'meetings', editingMeetingId);
+                        await setDoc(meetingRef, newMeeting, { merge: true }); // 使用 merge 以防萬一
+                        editingMeetingId = null; 
+                    } else {
+                        // 新增
+                        await addDoc(collection(db, 'meetings'), newMeeting);
+                    }
+                    
+                    await clearDraft(); // 清除草稿
+                    resetFormOnly(); // 清空本地表單
+                    
+                    // 產生 HTML (給預覽頁)
+                    const htmlOutput = generateMeetingHtml(newMeeting);
+                    formattedMinutes.innerHTML = htmlOutput;
+                    mainContentContainer.classList.add('hidden'); 
+                    outputContainer.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                    copySuccess.classList.add('hidden');
+
+                } catch (e) {
+                    console.error("儲存會議失敗:", e);
+                    alert("儲存會議失敗！請檢查網路連線。");
+                }
+            });
+
+            // --- 綁定複製/下載/重設 (Firebase 版) ---
+            copyBtn.addEventListener('click', () => {
+                const textOutput = generatePlainTextOutput(); 
+                clipboardHelper.value = textOutput;
+                clipboardHelper.select();
+                try {
+                    document.execCommand('copy');
+                    copySuccess.classList.remove('hidden');
+                    setTimeout(() => copySuccess.classList.add('hidden'), 2000);
+                } catch (err) { console.error('複製失敗:', err); }
+            });
+            downloadBtn.addEventListener('click', () => {
+                const title = document.getElementById('meeting-title').value.trim() || '會議記錄';
+                const date = document.getElementById('meeting-date').value || '日期未填';
+                const filename = `[${date}] ${title}.html`; 
+                const htmlContent = document.getElementById('formatted-minutes').innerHTML;
+                const styleContent = document.getElementById('document-styles').innerHTML;
+                const fullHtml = `
+                    <!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>${title}</title>
+                    <style>body{margin: 2rem; font-family: 'Inter', 'Noto Sans TC', sans-serif;} ${styleContent}</style></head>
+                    <body>${htmlContent}</body></html>`;
+                const blob = new Blob(['\uFEFF', fullHtml], { type: 'text/html;charset=utf-8' }); 
+                const href = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = href; a.download = filename;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a); URL.revokeObjectURL(href);
+            });
+            
+            // 重設按鈕 (返回編輯)
+            resetBtn.addEventListener('click', async () => {
+                mainContentContainer.classList.remove('hidden'); 
+                outputContainer.classList.add('hidden'); 
+                copySuccess.classList.add('hidden');
+                
+                // 重設表單 (會自動觸發草稿監聽器載入草稿)
+                await clearDraft(); // 清除草稿
+                resetFormOnly(); // 清空本地
+                editingMeetingId = null; // 確保不在編輯模式
+
+                tabButtons[0].click(); // 切回第一個分頁
+            });
+            
+            // 只清空表單，不清除草稿 (用於登出)
+            function resetFormOnly() {
+                document.getElementById('meeting-title').value = '';
+                document.getElementById('meeting-location').value = '';
+                document.getElementById('meeting-recorder').value = '';
+                document.getElementById('meeting-attendees').value = '';
+                document.getElementById('meeting-agenda').value = '';
+                document.getElementById('meeting-date').value = new Date().toISOString().split('T')[0];
+                decisions = [];
+                renderDecisions();
+                editingDecisionIndex = null;
+                addDecisionBtn.textContent = '新增決議';
+                addDecisionBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                addDecisionBtn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                decisionInput.value = '';
+                discussionLog = [];
+                renderDiscussionLog();
+                resetLogForm(); 
+                personColorMap.clear(); 
+                renderActions(); 
+                editingMeetingId = null;
+                const oldNotification = mainContentContainer.querySelector('.bg-yellow-100');
+                if (oldNotification) oldNotification.remove();
+                tabButtons[0].click();
+            }
+            
+            // --- 待辦事項 Modal 相關 ---
+            function populateEditModal(action) {
+                modalActionId.value = action.docId; // *** 修改：使用 docId ***
+                modalActionTitle.value = action.title;
+                modalActionNotes.value = action.notes || ''; 
+                modalActionOwner.value = action.owner;
+                modalActionDue.value = action.due;
+                modalActionStatus.value = action.status;
+                modalActionUpdate.value = ''; 
+                modalActionHistory.innerHTML = '';
+                if (action.progressUpdates) {
+                    action.progressUpdates.forEach(update => {
+                        modalActionHistory.innerHTML += `<p><strong>${update.date}:</strong> ${update.update}</p>`;
+                    });
+                }
+                modalActionHistory.scrollTop = modalActionHistory.scrollHeight; 
+            }
+
+            // --- 發言回應 Modal 相關 ---
+            function showReplyModal(topicId, reply = null) {
+                const topic = discussionLog.find(t => t.id === topicId);
+                if (!topic) return;
+                
+                replyTopicId.value = topicId;
+                replyToStatement.textContent = `${topic.speaker}: ${topic.statement.substring(0, 100)}...`;
+                
+                if (reply) {
+                    // 編輯模式
+                    replyModalTitle.textContent = "編輯回應";
+                    saveReplyBtn.textContent = "儲存變更";
+                    replyId.value = reply.id;
+                    replySpeaker.value = reply.speaker;
+                    replyStatement.value = reply.statement;
+                } else {
+                    // 新增模式
+                    replyModalTitle.textContent = "新增回應";
+                    saveReplyBtn.textContent = "儲存回應";
+                    replyId.value = '';
+                    replySpeaker.value = ''; // (可選) 自動填入 currentUserEmail
+                    replyStatement.value = '';
+                }
+                replyModal.classList.remove('hidden');
+                replySpeaker.focus();
+            }
+            function hideReplyModal() {
+                replyModal.classList.add('hidden');
+            }
+
+
+            // --- 綁定過往會議 Modal (Firebase 版) ---
+            viewPastMeetingsBtn.addEventListener('click', () => {
+                renderPastMeetingsList(); // 重新渲染列表 (資料已由 onSnapshot 更新)
+                pastMeetingContent.innerHTML = '<p class="text-slate-500">請從左側選擇一場會議來檢視內容。</p>';
+                pastMeetingContent.dataset.currentId = ''; 
+                pastMeetingsModal.classList.remove('hidden');
+            });
+            closePastModalBtn.addEventListener('click', () => pastMeetingsModal.classList.add('hidden'));
+            pastMeetingsModal.addEventListener('click', (e) => {
+                if (e.target === pastMeetingsModal) pastMeetingsModal.classList.add('hidden');
+            });
+            
+            pastMeetingsList.addEventListener('click', async (e) => {
+                const viewBtn = e.target.closest('.view-past-meeting-content');
+                const editBtn = e.target.closest('.edit-past-meeting-btn');
+                const deleteBtn = e.target.closest('.delete-past-meeting-btn'); 
+                
+                if (viewBtn) {
+                    const id = viewBtn.closest('.data-item').dataset.id;
+                    const meeting = meetings.find(m => m.docId === id);
+                    if(meeting) {
+                        const html = generateMeetingHtml(meeting);
+                        pastMeetingContent.innerHTML = html;
+                        pastMeetingContent.dataset.currentId = id; 
+                    }
+                    document.querySelectorAll('#past-meetings-list > div').forEach(div => div.classList.remove('bg-blue-200'));
+                    viewBtn.closest('.data-item').classList.add('bg-blue-200');
+                }
+                
+                if (editBtn) {
+                    const id = editBtn.dataset.id;
+                    const meeting = meetings.find(m => m.docId === id);
+                    if (!meeting) return;
+                    
+                    // 載入會議資料
+                    editingMeetingId = id;
+                    document.getElementById('meeting-title').value = meeting.title;
+                    document.getElementById('meeting-date').value = meeting.date;
+                    document.getElementById('meeting-location').value = meeting.location;
+                    document.getElementById('meeting-recorder').value = meeting.recorder;
+                    document.getElementById('meeting-attendees').value = meeting.attendees; 
+                    document.getElementById('meeting-agenda').value = meeting.agenda;     
+                    decisions = [...meeting.decisions];
+                    discussionLog = [...(meeting.discussionLog || [])]; 
+                    renderDecisions();
+                    renderDiscussionLog();
+                    
+                    // 將載入的會議儲存為新草稿
+                    saveDraft(); 
+                    
+                    hidePastMeetingsModal();
+                    window.scrollTo(0, 0);
+                    
+                    const notification = document.createElement('div');
+                    notification.className = 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded-lg mb-4 shadow-sm';
+                    notification.textContent = `已載入「${meeting.title}」進行編輯。待辦事項為目前最新狀態。 (按下 "產生會議記錄" 將會覆蓋儲存)`;
+                    const oldNotification = mainContentContainer.querySelector('.bg-yellow-100');
+                    if (oldNotification) oldNotification.remove();
+                    document.getElementById('tab-meeting').prepend(notification); 
+                    setTimeout(() => {
+                        if (notification.parentNode) notification.remove();
+                    }, 5000);
+                    tabButtons[0].click();
+                }
+                
+                if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
+                    const meeting = meetings.find(m => m.docId === id);
+                    if (!meeting) return;
+                    
+                    showConfirmModal('刪除過往會議', `您確定要永久刪除「${meeting.title}」這筆會議記錄嗎？此操作無法復原。`, "確認刪除", async () => {
+                        try {
+                            await deleteDoc(doc(db, 'meetings', id));
+                            // onSnapshot 會自動更新列表
+                            if (pastMeetingContent.dataset.currentId === id) {
+                                pastMeetingContent.innerHTML = '<p class="text-slate-500">請從左側選擇一場會議來檢視內容。</p>';
+                                pastMeetingContent.dataset.currentId = '';
+                            }
+                        } catch(e) {
+                            console.error("刪除會議失敗:", e);
+                        }
+                    });
+                }
+            });
+
+            // --- 綁定自動儲存事件 ---
+            const fieldsToSave = ['meeting-title', 'meeting-date', 'meeting-location', 'meeting-recorder', 'meeting-attendees', 'meeting-agenda'];
+            fieldsToSave.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('input', saveDraft);
+            });
+            
+            // --- 初始設定 ---
+            document.getElementById('meeting-date').value = new Date().toISOString().split('T')[0];
+
+        }); // DOMContentLoaded 結束
     </script>
+</head>
+<body class="bg-slate-50 text-slate-800 p-4 md:p-8">
 
-    <!-- 主結構 -->
-    <div class="flex h-screen bg-slate-100">
-
-        <!-- 左側邊欄: 會議列表 -->
-        <aside id="sidebar" class="w-1/3 max-w-sm h-full flex flex-col bg-white border-r border-slate-200">
-            <header class="p-4 border-b border-slate-200 flex-shrink-0">
-                <h1 class="text-2xl font-bold text-blue-600">AI 會議助理</h1>
-                <p id="auth-status" class="text-xs text-slate-400 mt-1">初始化中...</p>
-            </header>
-            
-            <div class="p-4 border-b border-slate-200 flex-shrink-0 flex justify-between items-center">
-                 <h2 class="text-lg font-semibold text-slate-800">會議列表</h2>
-                <button id="new-meeting-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg shadow transition duration-150 ease-in-out flex items-center justify-center gap-1 text-sm">
-                    <ion-icon name="add-circle-outline" class="text-lg"></ion-icon>
-                    <span>新會議</span>
-                </button>
-            </div>
-
-            <nav class="flex-1 overflow-y-auto">
-                <ul id="meetings-list">
-                    <li class="p-4 text-center text-slate-500">載入中...</li>
-                </ul>
-            </nav>
-        </aside>
-
-        <!-- 右側主內容區 -->
-        <main id="main-content" class="flex-1 h-full flex flex-col">
-            
-            <!-- 視圖切換器 -->
-            <div id="view-toggle-container" class="p-2 bg-slate-100 border-b border-slate-200 flex-shrink-0">
-                <div class="flex w-full max-w-sm mx-auto bg-slate-200 rounded-lg p-1">
-                    <button class="tab-btn w-1/2 py-2 px-4 rounded-md text-sm font-semibold focus:outline-none" data-view="meetings">
-                        <ion-icon name="document-text-outline" class="inline-block align-text-bottom mr-1"></ion-icon>
-                        會議
-                    </button>
-                    <button class="tab-btn w-1/2 py-2 px-4 rounded-md text-sm font-semibold focus:outline-none" data-view="todos">
-                         <ion-icon name="checkbox-outline" class="inline-block align-text-bottom mr-1"></ion-icon>
-                        待辦事項
-                    </button>
-                </div>
-            </div>
-
-            <!-- 內容滾動區 -->
-            <div class="flex-1 overflow-y-auto p-6 md:p-10">
-                
-                <!-- 會議表單 (用於新增/編輯) -->
-                <section id="meeting-form" style="display: none;">
-                    <form class="max-w-3xl mx-auto space-y-6">
-                        <h2 id="form-title" class="text-3xl font-bold text-slate-800 mb-6">新增會議記錄</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="meeting-title" class="block text-sm font-medium text-slate-700 mb-1">會議標題</label>
-                                <input type="text" id="meeting-title" name="meeting-title" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：Q4 產品策略會議">
-                            </div>
-                            <div>
-                                <label for="meeting-recorder" class="block text-sm font-medium text-slate-700 mb-1">會議記錄人</label>
-                                <input type="text" id="meeting-recorder" name="meeting-recorder" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：王小明">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="meeting-attendees" class="block text-sm font-medium text-slate-700 mb-1">出席者 (用逗號分隔)</label>
-                            <input type="text" id="meeting-attendees" name="meeting-attendees" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="例如：張三, 李四, 王五">
-                        </div>
-
-                        <div>
-                            <label for="meeting-notes" class="block text-sm font-medium text-slate-700 mb-1">會議筆記</label>
-                            <textarea id="meeting-notes" name="meeting-notes" rows="10" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="請在此輸入您的會議原始筆記..."></textarea>
-                        </div>
-                        
-                        <!-- 按鈕區 -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button type="submit" id="form-save-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2">
-                                <ion-icon name="save-outline"></ion-icon>
-                                <span>儲存並由 AI 分析</span>
-                            </button>
-                            <button type="button" id="form-ai-btn" class="w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow text-lg transition duration-150 ease-in-out flex items-center justify-center gap-2 cursor-not-allowed" disabled>
-                                <ion-icon name="sparkles-outline"></ion-icon>
-                                <span>AI 分析 (需先儲存)</span>
-                            </button>
-                        </div>
-
-                        <!-- AI 摘要 (表單內) -->
-                        <div class="space-y-2">
-                            <h3 class="text-xl font-semibold text-slate-700">AI 摘要</h3>
-                            <div id="form-ai-summary" class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg min-h-[50px]">
-                                <p class="text-slate-500 italic">點擊「AI 分析」按鈕以產生摘要。</p>
-                            </div>
-                        </div>
-                        
-                        <!-- AI 待辦事項 (表單內) -->
-                        <div class="space-y-2">
-                            <h3 class="text-xl font-semibold text-slate-700">AI 待辦事項</h3>
-                            <div id="form-ai-action-items" class="space-y-3">
-                                <p class="text-slate-500 italic">點擊「AI 分析」按鈕以提取待辦事項。</p>
-                            </div>
-                        </div>
-
-                    </form>
-                </section>
-                
-                <!-- 會議顯示 (用於檢視) -->
-                <section id="meeting-display" class="max-w-4xl mx-auto space-y-8" style="display: none;">
-                    <div>
-                        <div class="flex flex-wrap justify-between items-start gap-4">
-                            <div>
-                                <h2 id="display-title" class="text-4xl font-bold text-slate-800"></h2>
-                                <p id="display-date" class="text-lg text-slate-500 mt-2"></p>
-                                <p id="display-recorder" class="text-md text-slate-600 mt-1"></p>
-                                <p id="display-attendees" class="text-md text-slate-600 mt-1"></p>
-                            </div>
-                            <div class="flex-shrink-0 mt-2 flex gap-2">
-                                <div id="edit-btn-container"></div>
-                                <div id="download-btn-container"></div>
-                            </div>
-                        </div>
-                        <div class="mt-4" id="delete-btn-container">
-                            <!-- 刪除按鈕由 JS 填入 -->
-                        </div>
-                    </div>
-                    
-                    <div id="display-summary" class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
-                        <!-- JS 載入 -->
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-2xl font-semibold mb-4 text-slate-700">待辦事項 (進度追蹤)</h3>
-                        <ul id="display-action-items-list" class="space-y-3">
-                            <!-- JS 載入 -->
-                        </ul>
-                    </div>
-
-                    <div id="display-notes" class="mt-10">
-                        <!-- JS 載入 -->
-                    </div>
-                </section>
-                
-                <!-- 全域待辦事項視圖 -->
-                <section id="todos-view" class="max-w-4xl mx-auto space-y-8" style="display: none;">
-                    <h2 class="text-3xl font-bold text-slate-800 mb-6">所有待辦事項</h2>
-                    <div id="global-todos-list" class="space-y-4">
-                        <!-- 全域待辦事項列表由 JS 載入 -->
-                    </div>
-                </section>
-            </div>
-        </main>
-    </div>
-
-    <!-- 載入中遮罩 -->
-    <div id="loading-overlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-            <p class="text-lg font-medium text-slate-700">處理中...</p>
-        </div>
-    </div>
-    
-    <!-- 錯誤訊息 Modal -->
-    <div id="error-overlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <div class="flex items-center">
-                <ion-icon name="warning-outline" class="text-3xl text-red-500 mr-3 flex-shrink-0"></ion-icon>
-                <h3 class="text-xl font-semibold text-slate-800">發生錯誤</h3>
-            </div>
-            <p id="error-message-text" class="text-slate-600 mt-4 mb-6 break-words">發生未預期的錯誤。</p>
-            <button id="close-error-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg">
-                關閉
+    <!-- *** 新增：登入畫面 *** -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-[100]">
+        <div class="bg-white p-10 rounded-2xl shadow-xl text-center max-w-md mx-auto">
+            <h1 class="text-3xl font-bold text-slate-900 mb-4">會議記錄系統</h1>
+            <p class="text-slate-600 mb-8">這是一個團隊共享版，請登入您的 Google 帳號以開始使用。</p>
+            <button id="login-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 5.2-6.4 9-11.3 9-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.1 5.7 5.7C13.5 16.1 18.4 14 24 14c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.1z"/><path fill="#4CAF50" d="m24 44c5.6 0 10.6-1.9 14.6-5.1l-5.7-5.7c-2.1 2-4.9 3.2-8 3.2-5.6 0-10.5-2.1-13.4-5.4l-5.7 5.7C9.7 40.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-1.6 5.2-6.4 9-11.3 9-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/></svg>
+                使用 Google 帳號登入
             </button>
         </div>
     </div>
 
-    <!-- 確認 Modal -->
-    <div id="confirm-overlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <div class="flex items-start">
-                <ion-icon name="alert-circle-outline" class="text-3xl text-yellow-500 mr-3 flex-shrink-0"></ion-icon>
-                <div class_E_S_S_ = "flex-1">
-                    <h3 id="confirm-title" class="text-xl font-semibold text-slate-800">您確定嗎？</h3>
-                    <p id="confirm-message-text" class="text-slate-600 mt-2 mb-6 break-words">此操作無法復原。</p>
+    <!-- *** 新增：主應用程式容器 (預設隱藏) *** -->
+    <div id="app-container" class="hidden">
+
+        <div class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-xl border border-slate-100">
+
+            <div class="bg-gradient-to-r from-blue-500 to-sky-400 p-6 md:p-8 rounded-xl shadow-lg mb-10">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="text-white">
+                        <h1 class="text-3xl font-bold">
+                            會議記錄系統
+                        </h1>
+                        <!-- *** 新增：使用者狀態 *** -->
+                        <div class="flex items-center gap-4 mt-2">
+                            <span id="user-status" class="text-blue-100"></span>
+                            <button id="logout-btn" class="hidden text-white font-medium text-sm bg-blue-700 hover:bg-white hover:text-blue-700 py-1 px-3 rounded-full">
+                                登出
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 mt-4 md:mt-0">
+                        <button id="view-past-meetings-btn" class="bg-white text-blue-700 py-2 px-5 rounded-lg font-bold hover:bg-blue-50 shadow-md focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600">
+                            檢視過往會議
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-3">
-                <button id="cancel-confirm-btn" class="bg-gray-200 hover:bg-gray-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">
-                    取消
+
+            <!-- 分頁切換 -->
+            <div class="mb-8">
+                <div class="border-b border-slate-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-meeting">
+                            本次會議記錄
+                        </button>
+                        <button class="tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-actions">
+                            待辦事項追蹤
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+
+            <!-- 表單區域 -->
+            <div id="minutes-form">
+                <!-- 分頁 1 (會議) -->
+                <div id="tab-meeting" class="tab-content active">
+                    <!-- ... (基本資料表單) ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="meeting-title" class="block text-sm font-medium text-slate-700 mb-2">會議標題</label>
+                            <input type="text" id="meeting-title" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="請輸入會議標題" required>
+                        </div>
+                        <div>
+                            <label for="meeting-date" class="block text-sm font-medium text-slate-700 mb-2">會議日期</label>
+                            <input type="date" id="meeting-date" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label for="meeting-location" class="block text-sm font-medium text-slate-700 mb-2">會議地點 (或連結)</label>
+                            <input type="text" id="meeting-location" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="請輸入會議地點或連結">
+                        </div>
+                        <div>
+                            <label for="meeting-recorder" class="block text-sm font-medium text-slate-700 mb-2">記錄人</label>
+                            <input type="text" id="meeting-recorder" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="您的姓名">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="meeting-attendees" class="block text-sm font-medium text-slate-700 mb-2">出席人員</label>
+                            <textarea id="meeting-attendees" rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="請輸入出席人員姓名，用逗號或換行分隔"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="meeting-agenda" class="block text-sm font-medium text-slate-700 mb-2">會議目的 / 議程</label>
+                            <textarea id="meeting-agenda" rows="4" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="條列說明此次會議的主要目的或討論項目"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 動態區塊：重要決議 -->
+                    <div class="mt-8">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2">重要決議</h2>
+                        <div id="decisions-list" class="space-y-3 mb-4"></div>
+                        <div class="flex items-center space-x-3">
+                            <input type="text" id="decision-input" class="flex-grow w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="輸入一項決議">
+                            <button type="button" id="add-decision-btn" class="flex-shrink-0 bg-blue-600 text-white py-3 px-5 rounded-lg font-medium hover:bg-blue-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                新增決議
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 發言記錄 -->
+                    <div class="mt-8 bg-slate-50 p-4 md:p-6 rounded-xl shadow-inner border border-slate-200">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2">發言記錄 (討論串)</h2>
+                        <div id="log-list" class="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div class="md:col-span-1">
+                                <label for="log-speaker" class="block text-sm font-medium text-slate-700 mb-1">發言人 (必填)</label>
+                                <input type="text" id="log-speaker" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="發言人">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label for="log-statement" class="block text-sm font-medium text-slate-700 mb-1">新話題 (必填)</label>
+                                <input type="text" id="log-statement" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="發起一個新話題">
+                            </div>
+                            <div class="md:col-span-4 flex justify-between items-center mt-2">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="log-is-motion" class="h-4 w-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500">
+                                    <span class="text-purple-700 font-medium">設為臨時動議</span>
+                                </label>
+                                <button type="button" id="add-log-btn" class="bg-blue-600 text-white py-3 px-5 rounded-lg font-medium hover:bg-blue-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                    新增話題
+                                </button>
+                            </div>
+                            <div id="log-error" class="text-red-600 text-sm text-center md:col-span-4 hidden">
+                                請填寫「發言人」和「新話題」
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 產生按鈕 -->
+                    <div class="mt-10 text-center">
+                        <button type="submit" id="generate-minutes-btn" class="w-full md:w-auto bg-green-600 text-white text-lg font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-green-700 transition-colors transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            產生會議記錄
+                        </button>
+                    </div>
+                </div> <!-- 結束 Tab 1 -->
+
+                <!-- 分頁 2 (待辦) -->
+                <div id="tab-actions" class="tab-content">
+                    <div class="bg-slate-50 p-4 md:p-6 rounded-xl shadow-inner border border-slate-200">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2">待辦事項追蹤 (團隊共享)</h2>
+                        <p class="text-sm text-slate-500 mb-4">
+                            此清單團隊即時共享。
+                        </p>
+                        <div id="actions-list" class="space-y-4 mb-4"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-x-3 mb-1">
+                            <label class="md:col-span-2 text-sm font-medium text-slate-700">主標題</label>
+                            <label class="text-sm font-medium text-slate-700">負責人</label>
+                            <label class="text-sm font-medium text-slate-700">截止日期</label>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input type="text" id="action-title" class="md:col-span-2 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="任務主標題 (必填)">
+                            <input type="text" id="action-owner" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="負責人 (必填)">
+                            <input type="date" id="action-due" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <div class="md:col-span-4">
+                                <label for="action-notes" class="text-sm font-medium text-slate-700 mb-1 block">備註 (選填)</label>
+                                <textarea id="action-notes" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="補充說明任務的詳細內容"></textarea>
+                            </div>
+                            <button type="button" id="add-action-btn" class="md:col-span-4 bg-blue-600 text-white py-3 px-5 rounded-lg font-medium hover:bg-blue-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                新增待辦
+                            </button>
+                            <div id="action-error" class="text-red-600 text-sm text-center md:col-span-4 hidden">
+                                請至少填寫「主標題」和「負責人」
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- 結束 Tab 2 -->
+            </div> <!-- 結束 minutes-form (外層) -->
+
+            <!-- 輸出預覽區域 (預設隱藏) -->
+            <div id="output-container" class="hidden mt-10">
+                <h2 class="text-3xl font-bold text-center text-slate-900 mb-8">會議記錄預覽</h2>
+                <div id="formatted-minutes" class="bg-slate-50 border border-slate-200 p-6 md:p-10 rounded-lg shadow-inner prose max-w-none"></div>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button id="download-btn" class="flex-1 bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        下載為 .html (保留格式)
+                    </button>
+                    <button id="copy-btn" class="flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        複製文字內容
+                    </button>
+                    <button id="reset-btn" class="flex-1 bg-slate-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-slate-600 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
+                        返回編輯 / 新增
+                    </button>
+                </div>
+                <div id="copy-success" class="text-center text-green-600 font-medium mt-4 hidden">
+                    已成功複製到剪貼簿！
+                </div>
+            </div>
+        </div> <!-- 主容器結束 -->
+    </div> <!-- APP 容器結束 -->
+
+
+    <!-- 所有 Modals (彈出視窗) -->
+    <textarea id="clipboard-helper" style="position: absolute; left: -9999px;"></textarea>
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-2xl p-6 rounded-2xl shadow-xl m-4">
+            <h3 class="text-xl font-bold mb-6 text-slate-900">編輯 / 更新待辦事項</h3>
+            <input type="hidden" id="edit-action-id">
+            <div class="space-y-4">
+                <div><label for="modal-action-title" class="block text-sm font-medium text-slate-700">主標題</label><input type="text" id="modal-action-title" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></div>
+                <div><label for="modal-action-notes" class="block text-sm font-medium text-slate-700">備註</label><textarea id="modal-action-notes" rows="3" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></textarea></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="modal-action-owner" class="block text-sm font-medium text-slate-700">負責人</label><input type="text" id="modal-action-owner" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></div>
+                    <div><label for="modal-action-due" class="block text-sm font-medium text-slate-700">截止日期</label><input type="date" id="modal-action-due" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></div>
+                </div>
+                <div>
+                    <label for="modal-action-status" class="block text-sm font-medium text-slate-700">任務狀態</label>
+                    <select id="modal-action-status" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="pending">待處理</option><option value="in_progress">進行中</option><option value="done">已完成</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <h4 class="font-semibold text-slate-800">進度歷史</h4>
+                    <div id="modal-action-history" class="mt-2 max-h-32 overflow-y-auto bg-slate-50 border border-slate-200 p-3 rounded-lg text-sm text-slate-600 space-y-1"></div>
+                </div>
+                <div><label for="modal-action-update" class="block text-sm font-medium text-slate-700">新增進度更新 (選填)</label><input type="text" id="modal-action-update" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500" placeholder="例如: 70%, 或 已完成初稿"></div>
+            </div>
+            <div class="mt-8 flex justify-end space-x-3">
+                <button type="button" id="cancel-edit-btn" class="bg-slate-200 text-slate-800 py-2 px-5 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">取消</button>
+                <button type="button" id="save-action-btn" class="bg-blue-600 text-white py-2 px-5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">儲存變更</button>
+            </div>
+        </div>
+    </div>
+    <div id="reply-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-xl p-6 rounded-2xl shadow-xl m-4">
+            <h3 id="reply-modal-title" class="text-xl font-bold mb-4 text-slate-900">新增回應</h3>
+            <p class="text-sm text-slate-600 mb-4 bg-slate-100 p-3 rounded-lg"><strong>回應話題：</strong><span id="reply-to-statement" class="block mt-1"></span></p>
+            <input type="hidden" id="reply-topic-id"><input type="hidden" id="reply-id">
+            <div class="space-y-4">
+                <div><label for="reply-speaker" class="block text-sm font-medium text-slate-700">發言人 (必填)</label><input type="text" id="reply-speaker" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></div>
+                <div><label for="reply-statement" class="block text-sm font-medium text-slate-700">回應內容 (必填)</label><textarea id="reply-statement" rows="3" class="mt-1 w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"></textarea></div>
+            </div>
+            <div class="mt-8 flex justify-end space-x-3">
+                <button type="button" id="cancel-reply-btn" class="bg-slate-200 text-slate-800 py-2 px-5 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">取消</button>
+                <button type="button" id="save-reply-btn" class="bg-blue-600 text-white py-2 px-5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">儲存回應</button>
+            </div>
+        </div>
+    </div>
+    <div id="past-meetings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full h-full max-w-6xl max-h-[90vh] p-6 rounded-2xl shadow-xl m-4 flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
+                <h3 class="text-2xl font-bold text-slate-900">會議記錄清單</h3>
+                <button type="button" id="close-past-modal-btn" class="text-slate-500 hover:text-slate-800 p-2 rounded-full hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
-                <button id="confirm-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg">
-                    確定
-                </button>
+            </div>
+            <div class="flex-grow flex flex-col md:flex-row gap-6 overflow-hidden">
+                <div class="w-full md:w-1/3 h-full overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
+                    <div id="past-meetings-list" class="space-y-2"><p class="text-slate-500">沒有儲存的會議...</p></div>
+                </div>
+                <div class="w-full md:w-2/3 h-full overflow-y-auto border border-slate-200 rounded-lg">
+                    <div id="past-meeting-content" class="prose max-w-none p-6"><p class="text-slate-500">請從左側選擇一場會議來檢視內容。</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]"> 
+        <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl m-4">
+            <h3 id="confirm-title" class="text-xl font-bold mb-4 text-slate-900">請確認</h3>
+            <p id="confirm-message" class="text-slate-700 mb-6">您確定要執行此操作嗎？</p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="confirm-cancel-btn" class="bg-slate-200 text-slate-800 py-2 px-5 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">取消</button>
+                <button type="button" id="confirm-ok-btn" class="bg-red-600 text-white py-2 px-5 rounded-lg font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">確認刪除</button>
             </div>
         </div>
     </div>
 
+    <!-- 頁面 CSS 樣式 -->
+    <style id="document-styles">
+        body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+        .prose h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 0.75rem; }
+        .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; }
+        .prose li { margin-bottom: 0.25rem; }
+        .prose strong { font-weight: 600; }
+        .prose .action-item-history { list-style-type: circle; margin-left: 1.5rem; margin-top: 0.25rem; font-size: 0.9rem; color: #4b5563; }
+        button, .button { transition: all 0.2s ease-in-out; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .truncate-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .tab-btn.active { border-color: #3b82f6; color: #2563eb; background-color: #eff6ff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
 </body>
 </html>
