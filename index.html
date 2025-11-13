@@ -12,25 +12,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     
-   // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
-  authDomain: "my-meeting-system.firebaseapp.com",
-  projectId: "my-meeting-system",
-  storageBucket: "my-meeting-system.firebasestorage.app",
-  messagingSenderId: "856697883973",
-  appId: "1:856697883973:web:5dc8f04c7ec9d8d583822c"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);}
-
-
+    <!-- 
+      *** 警告：請勿移除此 SCRIPT 標籤 ***
+      這是 Firebase 團隊版的核心
+    -->
+    <script type="module">
+        // ----------------------------------------------------
+        // --- 步驟 1：Firebase 設定 ---
+        // ----------------------------------------------------
+        // *** // *** 錯誤：auth/api-key-not-valid ***
+        // *** // *** 您必須將下方的範例替換成您自己的 firebaseConfig ***
+        // *** // *** (請依照 instructions.md 指南取得) ***
+        const firebaseConfig = {
+          apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
+          authDomain: "my-meeting-system.firebaseapp.com",
+          projectId: "my-meeting-system",
+          storageBucket: "my-meeting-system.firebasestorage.app",
+          messagingSenderId: "856697883973",
+          appId: "1:856697883973:web:5dc8f04c7ec9d8d583822c"
+        };
         // ----------------------------------------------------
         // --- 下方的程式碼您不需要修改 ---
         // ----------------------------------------------------
@@ -57,7 +57,7 @@ const app = initializeApp(firebaseConfig);}
             orderBy, 
             serverTimestamp,
             writeBatch,
-            getDoc  // *** 新增：載入 getDoc ***
+            getDoc // *** 新增：載入 getDoc ***
         } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // --- 初始化 Firebase ---
@@ -1315,7 +1315,7 @@ const app = initializeApp(firebaseConfig);}
                             await deleteDoc(doc(db, 'meetings', id));
                             // onSnapshot 會自動更新列表
                             if (pastMeetingContent.dataset.currentId === id) {
-                                pastMeetingContent.innerHTML = '<p class="text-slate-500">請從左側選擇一場會議來檢視內容。</p>';
+                                pastMeetingContent.innerHTML = '<p class="text-slate-500">請從左側選擇一場會議來檢V視內容。</p>';
                                 pastMeetingContent.dataset.currentId = '';
                             }
                         } catch(e) {
@@ -1384,7 +1384,7 @@ const app = initializeApp(firebaseConfig);}
             <div class="mb-8">
                 <div class="border-b border-slate-200">
                     <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                        <button class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-blue-600 bg-blue-50" data-tab="tab-meeting">
+                        <button class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-meeting">
                             本次會議記錄
                         </button>
                         <button class="tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-lg text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="tab-actions">
@@ -1452,6 +1452,7 @@ const app = initializeApp(firebaseConfig);}
                                 <label for="log-statement" class="block text-sm font-medium text-slate-700 mb-1">新話題 (必填)</label>
                                 <input type="text" id="log-statement" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="發起一個新話題">
                             </div>
+                            
                             <div class="md:col-span-4 flex justify-between items-center mt-2">
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="checkbox" id="log-is-motion" class="h-4 w-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500">
@@ -1600,7 +1601,6 @@ const app = initializeApp(firebaseConfig);}
             <p id="confirm-message" class="text-slate-700 mb-6">您確定要執行此操作嗎？</p>
             <div class="flex justify-end space-x-3">
                 <button type="button" id="confirm-cancel-btn" class="bg-slate-200 text-slate-800 py-2 px-5 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">取消</button>
-
                 <button type="button" id="confirm-ok-btn" class="bg-red-600 text-white py-2 px-5 rounded-lg font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">確認刪除</button>
             </div>
         </div>
