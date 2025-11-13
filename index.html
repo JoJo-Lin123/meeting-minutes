@@ -667,10 +667,12 @@
                 if (user) {
                     // --- 使用者已登入，檢查權限 ---
                     currentUserId = user.uid;
-                    currentUserEmail = user.email;
+                    // *** 修改：強制轉為小寫 ***
+                    currentUserEmail = user.email.toLowerCase();
 
                     // *** 新增：檢查 Email 白名單 ***
                     try {
+                        // *** 修改：使用小寫的 Email 去查詢 ***
                         const memberRef = doc(db, 'team_members', currentUserEmail);
                         const memberDoc = await getDoc(memberRef);
 
@@ -678,7 +680,7 @@
                             // --- 權限通過 ---
                             appContainer.classList.remove('hidden');
                             loginOverlay.classList.add('hidden');
-                            userStatus.textContent = `登入身分：${currentUserEmail}`;
+                            userStatus.textContent = `登入身分：${user.email}`; // 顯示原始 Email
                             logoutBtn.classList.remove('hidden');
 
                             // 啟動所有 Firebase 監聽器
@@ -690,7 +692,7 @@
                             // *** 修改：不再強制登出 ***
                             // await signOut(auth); 
                             const loginErrorEl = document.getElementById('login-message');
-                            loginErrorEl.textContent = `您的帳號 (${currentUserEmail}) 未被授權存取此系統。請聯繫管理員。`;
+                            loginErrorEl.textContent = `您的帳號 (${user.email}) 未被授權存取此系統。請聯繫管理員。`;
                             loginErrorEl.classList.add('text-red-600', 'font-bold');
                         }
                     } catch (error) {
