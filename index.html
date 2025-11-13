@@ -16,12 +16,6 @@
     <script type="module">
         // *** 步驟 6：將您在 Firebase 取得的 CONFIG 貼在這裡 ***
         // *** (這只是範例，請務必替換成您自己的！) ***
-
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // !!! 錯誤修正：您必須將下方的範例 'firebaseConfig'                !!!
-        // !!! 完整替換成您在 Firebase 專案中取得的「您自己的」設定碼。       !!!
-        // !!! 目前的 'apiKey' 是無效的範例，這就是導致 'auth/api-key-not-valid' 錯誤的原因。 !!!
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         const firebaseConfig = {
            apiKey: "AIzaSyDpG3PvvYnTRxYFAXFsW-imf3X9pShxHh0",
   authDomain: "my-meeting-system.firebaseapp.com",
@@ -56,7 +50,8 @@
             query, 
             orderBy, 
             serverTimestamp,
-            writeBatch
+            writeBatch,
+            getDoc  // *** 新增：載入 getDoc ***
         } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // --- 初始化 Firebase ---
@@ -664,22 +659,42 @@
             });
 
             // --- 核心：監聽登入狀態 ---
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => { // *** 設為 async ***
                 if (user) {
-                    // --- 使用者已登入 ---
+                    // --- 使用者已登入，檢查權限 ---
                     currentUserId = user.uid;
                     currentUserEmail = user.email;
-                    
-                    // 顯示應用程式，隱藏登入畫面
-                    appContainer.classList.remove('hidden');
-                    loginOverlay.classList.add('hidden');
-                    userStatus.textContent = `登入身分：${currentUserEmail}`;
-                    logoutBtn.classList.remove('hidden');
 
-                    // 啟動所有 Firebase 監聽器
-                    setupActionListeners();
-                    setupMeetingListeners();
-                    setupDraftListener(currentUserId);
+                    // *** 新增：檢查 Email 白名單 ***
+                    try {
+                        const memberRef = doc(db, 'team_members', currentUserEmail);
+                        const memberDoc = await getDoc(memberRef);
+
+                        if (memberDoc.exists()) {
+                            // --- 權限通過 ---
+                            appContainer.classList.remove('hidden');
+                            loginOverlay.classList.add('hidden');
+                            userStatus.textContent = `登入身分：${currentUserEmail}`;
+                            logoutBtn.classList.remove('hidden');
+
+                            // 啟動所有 Firebase 監聽器
+                            setupActionListeners();
+                            setupMeetingListeners();
+                            setupDraftListener(currentUserId);
+                        } else {
+                            // --- 權限不足 ---
+                            const loginErrorEl = document.getElementById('login-message');
+                            loginErrorEl.textContent = `您的帳號 (${currentUserEmail}) 未被授權存取此系統。請聯繫管理員。`;
+                            loginErrorEl.classList.add('text-red-600', 'font-bold');
+                            await signOut(auth); // 強制登出
+                        }
+                    } catch (error) {
+                        console.error("檢查權限失敗:", error);
+                        const loginErrorEl = document.getElementById('login-message');
+                        loginErrorEl.textContent = `檢查權限時發生錯誤，請稍後再試。`;
+                        loginErrorEl.classList.add('text-red-600', 'font-bold');
+                        await signOut(auth); // 強制登出
+                    }
                     
                 } else {
                     // --- 使用者已登出 ---
@@ -691,6 +706,12 @@
                     loginOverlay.classList.remove('hidden');
                     userStatus.textContent = '';
                     logoutBtn.classList.add('hidden');
+
+                    // 重設登入錯誤訊息
+                    const loginErrorEl = document.getElementById('login-message'); // *** 修改：使用 ID ***
+                    loginErrorEl.textContent = '這是一個團隊共享版，請登入您的 Google 帳號以開始使用。';
+                    loginErrorEl.classList.remove('text-red-600', 'font-bold');
+
 
                     // 取消所有監聽
                     if (actionsUnsubscribe) actionsUnsubscribe();
@@ -1302,7 +1323,8 @@
     <div id="login-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-[100]">
         <div class="bg-white p-10 rounded-2xl shadow-xl text-center max-w-md mx-auto">
             <h1 class="text-3xl font-bold text-slate-900 mb-4">會議記錄系統</h1>
-            <p class="text-slate-600 mb-8">這是一個團隊共享版，請登入您的 Google 帳號以開始使用。</p>
+            <!-- *** 修改：新增 ID *** -->
+            <p id="login-message" class="text-slate-600 mb-8">這是一個團隊共享版，請登入您的 Google 帳號以開始使用。</p>
             <button id="login-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 5.2-6.4 9-11.3 9-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.1 5.7 5.7C13.5 16.1 18.4 14 24 14c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.1z"/><path fill="#4CAF50" d="m24 44c5.6 0 10.6-1.9 14.6-5.1l-5.7-5.7c-2.1 2-4.9 3.2-8 3.2-5.6 0-10.5-2.1-13.4-5.4l-5.7 5.7C9.7 40.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-1.6 5.2-6.4 9-11.3 9-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/></svg>
                 使用 Google 帳號登入
@@ -1578,7 +1600,16 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         .truncate-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-        .tab-btn.active { border-color: #3b82f6; color: #2563eb; background-color: #eff6ff; }
+        /* *** 修改：分頁樣式 *** */
+        .tab-btn {
+            border-color: transparent; /* 預設無底線 */
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .tab-btn.active { 
+            border-color: #3b82f6; /* blue-500 */
+            color: #2563eb; /* blue-600 */
+            font-weight: 600;
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
